@@ -1,0 +1,17 @@
+Package: tempoSig
+Type: Package
+Title: Mutation Signature Extraction
+Version: 0.1.1
+Author: Who wrote it
+Maintainer: Jun Woo <wooh@mskcc.org>
+Depends: R (>= 3.6.0)
+Imports: gtools, Rcpp (>= 0.12.16)
+Description: Infers mutation signatures from sequencing data or spectra. 
+    Also includes associated utility functions for auxiliary and downstream analyses. 
+License: GPL (>= 2)
+LinkingTo: Rcpp
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.0
+NeedsCompilation: yes
+Packaged: 2020-04-24 00:10:36 UTC; jwoo
