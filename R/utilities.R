@@ -70,12 +70,19 @@ writeExposure <- function(object, output, sep = '\t'){
   if(all(dim(expo) == 0)) stop('Exposure in object empty')
 
   is.pv <- !all(dim(pvalue(object)) == 0)   # pvalue is not empty
-  if(!is.pv){
+  if(!is.pv)
     out <- cbind(data.frame(Tumor_Sample_Barcode = rownames(expo), TMB = tmb(object)),
                as.data.frame(expo))
-    write.table(out, file=output, sep = sep, row.names=F, quote=F)
-    return(invisible(object))
+  else{
+    out <- data.frame(Tumor_Sample_Barcode = rownames(expo), TMB = tmb(object))
+    pv <- pvalue(object)
+    sig.names <- colnames(expo)
+    for(k in seq(NCOL(expo))){
+      tmp <- data.frame(expo[,k], pv[,k])
+      names(tmp) <- paste0(sig.names[k], c('.observed','.pvalue'))
+      out <- cbind(out, tmp)
+    }
   }
-
+  write.table(out, file=output, sep = sep, row.names = F, quote = F)
   return(invisible(object))
 }

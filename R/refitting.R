@@ -14,11 +14,11 @@
 #' @return Matrix of dimension \code{(K, N)} with columns giving estimated
 #'         loading of signatures in each sample.
 #' @export
-MutationalCone <- function(catalog, signatures='COSMIC.v2', normalize=FALSE){
+mutationalCone <- function(catalog, signatures='COSMIC.v2', normalize=FALSE){
   
   if(is.character(signatures)){
     if(signatures=='COSMIC.v2'){
-      fl <- system.file('extdata/COSMIC_SNV_signatures_v2.txt', package = 'vbSig')
+      fl <- system.file('extdata/COSMIC_SNV_signatures_v2.txt', package = 'tempoSig')
       signatures <- as.matrix(read.table(file =fl, header = TRUE, sep = '\t'))
     }
   } else if(!is.matrix(signatures)) stop('Input signature not a matrix')
@@ -51,6 +51,7 @@ MutationalCone <- function(catalog, signatures='COSMIC.v2', normalize=FALSE){
   rownames(weights) <- colnames(signatures)
   colnames(weights) <- colnames(catalog)
   if(normalize) weights <- t(t(weights)/colSums(weights))
+  if(NCOL(weights)==1) weights <- weights[,1]
   
   return(weights)
 }

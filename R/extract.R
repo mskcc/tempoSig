@@ -3,6 +3,8 @@
 #' Use known signature list to find the most likely exposures in samples
 #'
 #' @param object Object of class \code{tempoSig}
+#' @param method Refitting method; \code{mle} for maximum likelihood (default) or
+#'               \code{mutCone} for mutationalCone.
 #' @param itmax Maximum number of iterations for maximum likelihood estimate
 #' @param tol Tolerance for convergence
 #' @param min.tmb Minimum number of mutations in each sample. If \code{tmb} is less,
@@ -19,10 +21,11 @@
 #' b10 <- tempoSig(data[, 1:10])
 #' b10 <- extractSig(b10, compute.pval = TRUE, progress.bar = TRUE)
 #' @export
-extractSig <- function(object, itmax = 1000, tol = 1e-4, min.tmb = 5,
+extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb = 5,
                        compute.pval = FALSE, nperm = 1000, progress.bar = FALSE){
 
   if(!is(object, 'tempoSig')) stop('object is not of class tempoSig')
+  if(!method %in% c('mle','mutcone')) stop('Method is either mle or mutcone')
 
   spectrum <- catalog(object)
   ref <- signature(object)
@@ -45,12 +48,16 @@ extractSig <- function(object, itmax = 1000, tol = 1e-4, min.tmb = 5,
   if(progress.bar) pb <- txtProgressBar(style = 3)
   for(i in seq(nsample)){
     spec <- spectrum[, i]
-    h[i, ] <- hi <- decompose(x = spec, ref = ref, itmax = itmax, tol = tol, min.tmb = min.tmb)
+    h[i, ] <- hi <- ifelse(method=='mle',
+      decompose(x = spec, ref = ref, itmax = itmax, tol = tol, min.tmb = min.tmb),
+      mutationalCone(catalog = spectrum[, i, drop=F], signature = ref, normalize = TRUE))
     if(compute.pval){
       perm <- matrix(1, nrow=nref, ncol=nperm)
-      for(k in seq(nperm))
-        perm[, k] <- decompose(x = spec[sample(nnt)], ref = ref, itmax = itmax, tol = tol,
-                       min.tmb = min.tmb)   # samples under null hypothesis
+      for(k in seq(nperm)) # samples under null hypothesis
+        perm[, k] <- ifelse(method=='mle',
+          decompose(x = spec[sample(nnt)], ref = ref, itmax = itmax, tol = tol, min.tmb = min.tmb),
+          mutationalCone(catalog = spectrum[sample(nnt), i, drop=F], signature = ref, 
+                         normalize = TRUE))
       pv[i, ] <- rowSums(perm >= hi) / nperm
     }
     if(progress.bar) setTxtProgressBar(pb, i/nsample)
