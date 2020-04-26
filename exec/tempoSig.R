@@ -27,7 +27,7 @@ if(!is.null(args$sigfile)){  # custom signature file provided
   sig <- NULL
 }
 
-data <- read.table(args$catalog, header=TRUE, sep='\t')
+data <- read.table(args$catalog, header = TRUE, sep = '\t')
 x <- tempoSig(data = data, signat = sig)
 x <- extractSig(object = x, compute.pval = args$pvalue, nperm = args$nperm, progress.bar = TRUE)
 writeExposure(object = x, output = args$output, sep = '\t')
