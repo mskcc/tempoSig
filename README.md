@@ -59,3 +59,31 @@ Install [Rcpp](https://cran.r-project.org/package=Rcpp) if not installed already
 **tempoSig** can then be installed in R by
 
     > devtools::install_github("mskcc/tempoSig")
+
+## Quick start with command-line interface
+If you are not interested in interactive usages with more flexibility and functionality, or want to use **tempoSig** as a part of a pipeline, use the command-line script [tempoSig.R](https://github.com/mskcc/tempoSig/blob/master/exec/tempoSig.R). If you installed **tempoSig** as an R package using `install_github`, find the path via
+
+    > system.file('exec', 'tempoSig.R', package = 'tempoSig')
+   
+If you cloned the repository, the file is located at the `./exec` subdirectory of the github main directory. We denote this path as `SCRIPT_PATH`. The command syntax is
+
+    $ SCRIPT_PATH/tempoSig.R -h
+    usage: ./tempoSig.R [-h] [--cosmic_v3 | --cosmic_v2] [--sigfile SIGFILE]
+                        [--pvalue] [--nperm NPERM]
+                        CATALOG OUTPUT
+
+    Fit mutational catalog to signatures
+
+    positional arguments:
+      CATALOG            input catalog data file
+      OUTPUT             output file name
+
+    optional arguments:
+      -h, --help         show this help message and exit
+      --cosmic_v3        use COSMIC v3 reference signatures (default)
+      --cosmic_v2        use COSMIC v2 reference signatures
+      --sigfile SIGFILE  custom input reference signature file; overrides
+                         --cosmic_v3/2
+      --pvalue           estimate p-values
+      --nperm NPERM      number of permutations for p-value estimation; default
+                         1000
