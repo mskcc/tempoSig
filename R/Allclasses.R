@@ -1,26 +1,26 @@
 #' Class \code{tempoSig} for storing catalog and exposure
 #'
-#' \code{S4} class with storage for input catalog, reference signature,
+#' \code{S4} class with storage for input catalog, reference signatures,
 #' and output exposure inferred.
 #'
 #' @slot catalog Matrix of mutation count with samples in columns
 #'               and mutation types in rows
-#' @slot signature Matrix of reference signature; each column
-#'                 stores individual signature proportions with mutation
+#' @slot signat Matrix of reference signatures; each column
+#'                 stores individual signatures proportions with mutation
 #'                 types in rows
 #' @slot tmb Vector of total mutation loads for each sample
-#' @slot exposure Matrix of inferred proportions of signature
+#' @slot expos Matrix of inferred proportions of signatures
 #'                exposure; each row gives proportions of each
 #'                sample with signatures in columns
 #' @slot pvalue P-values of exposures estimated from permutation tests;
-#'            same dimension as \code{exposure}.
+#'            same dimension as \code{expos}.
 #' @return Object of class \code{tempoSig}
 #' @export tempoSig
 setClass('tempoSig',
          slots = c(catalog = 'matrix',
-                   signature = 'matrix',
+                   signat = 'matrix',
                    tmb = 'vector',
-                   exposure = 'matrix',
+                   expos = 'matrix',
                    pvalue = 'matrix'
          ))
 
@@ -28,8 +28,8 @@ setClass('tempoSig',
 #'
 #' @param data Input data of mutation catalog; samples in columns
 #'             and mutation types in rows.
-#' @param signature Reference signature table; default is COSMIC
-#'                  version 3 signature.
+#' @param signatures Reference signatures table; default is COSMIC
+#'                  version 3 signatures.
 #' @return Object of class \code{tempoSig}.
 #' @examples
 #' set.seed(130)
@@ -41,17 +41,17 @@ setClass('tempoSig',
 #'                   package='tempoSig'), header=TRUE, sep='\t')
 #' b <- tempoSig(data)
 #' @export
-tempoSig <- function(data, signature = NULL){
+tempoSig <- function(data, signat = NULL){
 
   if(!is(data, 'matrix')) data <- as.matrix(data)
-  if(is.null(signature))
-    signature <- as.matrix(read.table(system.file('extdata/COSMIC_SBS_signatures_v3.txt',
+  if(is.null(signat))
+    signat <- as.matrix(read.table(system.file('extdata/COSMIC_SBS_signatures_v3.txt',
                             package = 'tempoSig')))
-  else if(is.character(signature)){
-    if(!file.exists(signature)) stop(paste0('File ',signature,' does not exist'))
-    signature <- as.matrix(read.table(signature))
+  else if(is.character(signat)){
+    if(!file.exists(signat)) stop(paste0('File ',signat,' does not exist'))
+    signat <- as.matrix(read.table(signat))
   }
-  nts <- rownames(signature)
+  nts <- rownames(signat)
   ntd <- rownames(data)
   if(sum(is.na(ntd)) > 0) stop('Data must have explicit mutation type names')
   idx <- match(nts, ntd)
@@ -59,7 +59,7 @@ tempoSig <- function(data, signature = NULL){
     stop('Row names in data do not match reference signatures')
   data <- data[idx, ]
 
-  x <- new('tempoSig', catalog = data, signature = signature)
+  x <- new('tempoSig', catalog = data, signat = signat)
   x@tmb <- colSums(data)
 
   return(x)
@@ -80,7 +80,7 @@ setMethod('show', signature = 'tempoSig',
             cat('  ')
             print(utils::head(rownames(ca)))
             cat('Number of samples = ', NCOL(ca), '\n')
-            sg <- signature(object)
+            sg <- signat(object)
             cat('Number of signatures = ', NCOL(sg), '\n')
             cat('  ')
             print(utils::head(colnames(sg)))
@@ -99,15 +99,15 @@ setMethod('catalog', signature = 'tempoSig',
           }
 )
 #' @export
-setGeneric('signature', function(object) standardGeneric('signature'))
+setGeneric('signat', function(object) standardGeneric('signat'))
 #' Accessor for signature
 #'
-#' @param object Object containing signature
-#' @return \code{signature} data frame
+#' @param object Object containing signatures
+#' @return \code{signat} data frame
 #' @export
-setMethod('signature', signature = 'tempoSig',
+setMethod('signat', signature = 'tempoSig',
           function(object){
-            object@signature
+            object@signat
           }
 )
 #' @export
@@ -131,23 +131,23 @@ setMethod('tmb<-', signature = 'tempoSig',
             if(validObject(object)) return(object)
           })
 #' @export
-setGeneric('exposure', function(object) standardGeneric('exposure'))
+setGeneric('expos', function(object) standardGeneric('expos'))
 #' Accessor for exposure
 #'
-#' @param object Object containing \code{exposure}
-#' @return \code{exposure} data frame
+#' @param object Object containing \code{expo}
+#' @return \code{expos} data frame
 #' @export
-setMethod('exposure', signature = 'tempoSig',
+setMethod('expos', signature = 'tempoSig',
           function(object){
-            object@exposure
+            object@expos
           }
 )
 #' @export
-setGeneric('exposure<-', function(object, value) standardGeneric('exposure<-'))
+setGeneric('expos<-', function(object, value) standardGeneric('expos<-'))
 #' @export
-setMethod('exposure<-', signature = 'tempoSig',
+setMethod('expos<-', signature = 'tempoSig',
           function(object, value){
-            object@exposure <- value
+            object@expos <- value
             if(validObject(object)) return(object)
 })
 #' @export

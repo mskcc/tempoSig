@@ -28,7 +28,7 @@ extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb
   if(!method %in% c('mle','mutcone')) stop('Method is either mle or mutcone')
 
   spectrum <- catalog(object)
-  ref <- signature(object)
+  ref <- signat(object)
   mut.load <- tmb(object)
 
   nt <- rownames(ref)
@@ -49,13 +49,13 @@ extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb
   for(i in seq(nsample)){
     spec <- spectrum[, i]
     h[i, ] <- hi <- ifelse(method=='mle',
-      decompose(x = spec, ref = ref, itmax = itmax, tol = tol, min.tmb = min.tmb),
+      fitMLE(x = spec, ref = ref, itmax = itmax, tol = tol, min.tmb = min.tmb),
       mutationalCone(catalog = spectrum[, i, drop=F], signature = ref, normalize = TRUE))
     if(compute.pval){
       perm <- matrix(1, nrow=nref, ncol=nperm)
       for(k in seq(nperm)) # samples under null hypothesis
         perm[, k] <- ifelse(method=='mle',
-          decompose(x = spec[sample(nnt)], ref = ref, itmax = itmax, tol = tol, min.tmb = min.tmb),
+          fitMLE(x = spec[sample(nnt)], ref = ref, itmax = itmax, tol = tol, min.tmb = min.tmb),
           mutationalCone(catalog = spectrum[sample(nnt), i, drop=F], signature = ref, 
                          normalize = TRUE))
       pv[i, ] <- rowSums(perm >= hi) / nperm
@@ -64,7 +64,7 @@ extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb
   }
   if(progress.bar) close(pb)
 
-  exposure(object) <- h
+  expos(object) <- h
   if(compute.pval) pvalue(object) <- pv
 
   return(object)
@@ -80,7 +80,7 @@ extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb
 #' @param min.tmb Minimum mutation counts; if lower than this, \code{NA} is returned
 #' @return Vector of estimated signature exposure proportions
 #' @export
-decompose <- function(x, ref, itmax = 1000, tol = 1e-4, min.tmb = 5){
+fitMLE <- function(x, ref, itmax = 1000, tol = 1e-4, min.tmb = 5){
 
   num_sigs <- NCOL(ref)
   num_muts <- sum(x)

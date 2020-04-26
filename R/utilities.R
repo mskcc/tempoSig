@@ -39,7 +39,7 @@ plotExposure <- function(object, sample.id, cutoff = 1e-3, ...){
     if(length(sample.id)==0) stop(paste0(sample.id, 'is not in object'))
   }
   sample.id <- as.integer(sample.id)
-  expo <- exposure(object)
+  expo <- expos(object)
   if(sample.id < 1 | sample.id > NROW(expo)) stop('sample.id out of bound in object')
   e <- expo[sample.id,]
   names.arg <- names(e)
@@ -66,7 +66,7 @@ writeExposure <- function(object, output, sep = '\t'){
   if(!is(object, 'tempoSig')) stop('Object is not of class tempoSig')
   if(!is.character(output)) stop('Output file name must be characters')
   if(!sep %in% c(' ','\t')) stop('Delimiter must be either space or tab')
-  expo <- exposure(object)
+  expo <- expos(object)
   if(all(dim(expo) == 0)) stop('Exposure in object empty')
 
   is.pv <- !all(dim(pvalue(object)) == 0)   # pvalue is not empty
