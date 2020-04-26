@@ -2,51 +2,83 @@
 #'
 #' Use known signature list to find the most likely exposures in samples
 #'
-#' @param spectra Matrix of mutational spectra with mutation contexts in rows and genome
-#'        samples in columns
-#' @param ref Reference signature database with mutation contexts in rows and signatures
-#'        in columns
-#' @param maf Data frame of maf containing aggregated mutation data
+#' @param object Object of class \code{tempoSig}
+#' @param itmax Maximum number of iterations for maximum likelihood estimate
+#' @param tol Tolerance for convergence
+#' @param min.tmb Minimum number of mutations in each sample. If \code{tmb} is less,
+#'        \code{NA} will be returned for the sample.
+#' @param compute.pval Estimate p-values
+#' @param nperm Number of permutations
+#' @param progress.bar Display progress bar
 #' @import Rcpp
 #' @useDynLib tempoSig
+#' @examples
+#' data <- read.table(system.file('extdata', 'tcga-brca_catalog.txt', package='tempoSig'))
+#' b <- tempoSig(data)
+#' b <- extractSig(b, progress.bar = TRUE)
+#' b10 <- tempoSig(data[, 1:10])
+#' b10 <- extractSig(b10, compute.pval = TRUE, progress.bar = TRUE)
 #' @export
-extractSig <- function(spectrum = NULL, maf = NULL, ref = NULL, itmax = 1000, tol = 1e-4){
+extractSig <- function(object, itmax = 1000, tol = 1e-4, min.tmb = 5,
+                       compute.pval = FALSE, nperm = 1000, progress.bar = FALSE){
 
-  if(!is.null(spectrum))
-    spectrum <- t(spectrum)  # input has genomes in rows and mutatino types in columns
-  mut.load <- colSums(spectrum)
+  if(!is(object, 'tempoSig')) stop('object is not of class tempoSig')
 
-  if(is.null(spectrum) & is.null(maf))
-    stop('Either spectrum or maf must be provided.')
+  spectrum <- catalog(object)
+  ref <- signature(object)
+  mut.load <- tmb(object)
 
-  if(is.null(ref)){
-#   fl <- system.file('extdata/cosmic_SBS.signatures_v3.txt', package = 'tempoSig')
-    fl <- system.file('extdata/Stratton_signatures30.txt', package = 'tempoSig')
-    ref <- read.table(fl, header = TRUE, sep = '\t')
-    ref <- as.matrix(t(ref))  # rows: trinucleotides, columns: SBS
-  }
   nt <- rownames(ref)
+  nnt <- length(nt)
   idx <- match(nt, rownames(spectrum))
   if(sum(is.na(idx)) > 0 | sum(duplicated(idx)) > 0)
     stop('Mutation types in spectrum do not match reference.')
   spectrum <- spectrum[idx, ]  # rearrange rows to match reference
 
-  h <- apply(spectrum, 2, decompose, ref = ref, itmax = itmax, tol = tol)
-  rownames(h) <- colnames(ref)
+  nsample <- length(tmb(object))
+  nref <- NCOL(ref)
+  h <- matrix(0, nrow = nsample, ncol = nref)
+  colnames(h) <- colnames(ref)
+  rownames(h) <- colnames(spectrum)
+  if(compute.pval) pv <- h
 
-  H <- cbind(data.frame(Sample.Name = colnames(spectrum),
-                  Number.of.Mutations = mut.load), t(h))
-  return(H)
+  if(progress.bar) pb <- txtProgressBar(style = 3)
+  for(i in seq(nsample)){
+    spec <- spectrum[, i]
+    h[i, ] <- hi <- decompose(x = spec, ref = ref, itmax = itmax, tol = tol, min.tmb = min.tmb)
+    if(compute.pval){
+      perm <- matrix(1, nrow=nref, ncol=nperm)
+      for(k in seq(nperm))
+        perm[, k] <- decompose(x = spec[sample(nnt)], ref = ref, itmax = itmax, tol = tol,
+                       min.tmb = min.tmb)   # samples under null hypothesis
+      pv[i, ] <- rowSums(perm >= hi) / nperm
+    }
+    if(progress.bar) setTxtProgressBar(pb, i/nsample)
+  }
+  if(progress.bar) close(pb)
+
+  exposure(object) <- h
+  if(compute.pval) pvalue(object) <- pv
+
+  return(object)
 }
 
-# x = vector of observed proportions of mutation contexts
-# ref = matrix of reference signature proportions
-decompose <- function(x, ref, itmax = 1000, tol = 1e-4){
+#' Maximum likelihood inference of signature proportions
+#' 
+#' @param x Vector of observed proportions of mutation contexts
+#' @param ref Matrix of reference signature proportions with mutation types in rows
+#'            and signatures in columns
+#' @param itmax Maximum number of iterations
+#' @param tol Tolerance of convergence
+#' @param min.tmb Minimum mutation counts; if lower than this, \code{NA} is returned
+#' @return Vector of estimated signature exposure proportions
+#' @export
+decompose <- function(x, ref, itmax = 1000, tol = 1e-4, min.tmb = 5){
 
   num_sigs <- NCOL(ref)
   num_muts <- sum(x)
-  if(num_muts < 5){
-    warning('Sample has less than 5 mutations.')
+  if(num_muts < min.tmb){
+    warning(paste0('Sample has less than ', min.tmb, ' mutations.'))
     return(rep(NA, num_muts))
   }
   x <- x / num_muts
