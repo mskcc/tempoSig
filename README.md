@@ -1,3 +1,5 @@
 # tempoSig
 
-Mutation Signature Extraction
+Mutation Signature Extraction using Maximum Likelihood
+
+
