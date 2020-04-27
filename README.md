@@ -61,13 +61,15 @@ Install [Rcpp](https://cran.r-project.org/package=Rcpp) if not installed already
     > devtools::install_github("mskcc/tempoSig")
 
 ## Quick start with command-line interface
+
+### Main inference
 If you are not interested in interactive usages with more flexibility and functionality, or want to use **tempoSig** as a part of a pipeline, use the command-line script [tempoSig.R](https://github.com/mskcc/tempoSig/blob/master/exec/tempoSig.R). If you installed **tempoSig** as an R package using `install_github`, find the path via
 
     > system.file('exec', 'tempoSig.R', package = 'tempoSig')
    
-If you cloned the repository, the file is located at the `./exec` subdirectory of the github main directory. We denote this path as `SCRIPT_PATH`. The command syntax is
+If you cloned the repository, the file is located at the `./exec` subdirectory of the github main directory. We denote this package path directoy path as `PKG_PATH`. The command syntax is
 
-    $ SCRIPT_PATH/tempoSig.R -h
+    $ $PKG_PATH/exec/tempoSig.R -h
     usage: ./tempoSig.R [-h] [--cosmic_v3 | --cosmic_v2] [--sigfile SIGFILE]
                         [--pvalue] [--nperm NPERM]
                         CATALOG OUTPUT
@@ -84,6 +86,43 @@ If you cloned the repository, the file is located at the `./exec` subdirectory o
       --cosmic_v2        use COSMIC v2 reference signatures
       --sigfile SIGFILE  custom input reference signature file; overrides
                          --cosmic_v3/2
-      --pvalue           estimate p-values
+      --pvalue           estimate p-values (default FALSE)
       --nperm NPERM      number of permutations for p-value estimation; default
                          1000
+
+Only two arguments are mandatory: `CATALOG` and `OUTPUT`, each specifying the paths of input catalog data and output file to be written. Both are tab-delimited text files with headers. See [tcga-brca_catalog.txt](https://github.com/mskcc/tempoSig/blob/master/inst/extdata/tcga-brca_catalog.txt) for a catalog file example. For instance,
+
+    $ $PKG_PATH/exec/tempoSig.R $PKG_PATH/extdat/tcga-brca_catalog.txt output.txt
+    
+This command fits catalog data for 10 samples in `tcga-brca_catalog.txt` to [COSMIC v3 signatures](https://github.com/mskcc/tempoSig/edit/master/inst/extdata/COSMIC_SBS_signatures-v3.txt) (default). The output file `output.txt` has the following format:
+
+Tumor_Sample_Barcode | TMB | SBS2 | SBS3 | SBS4
+-------------------- | --- | ---- | ---- | ----
+TCGA.BH.A0EI         | 18  | 0.00 | 0.00 | 0.00
+TCGA.E9.A22B         | 50  | 0.18 | 0.00 | 0.00
+TCGA.OL.A5RV.        | 10  | 0.00 | 0.00 | 0.00 
+
+The following will use the COSMIC version 2 signature:
+
+    $ $PKG_PATH/exec/tempoSig.R  --cosmic_v2 $PKG_PATH/extdata/tcga-brca_catalog.txt output_v2.txt
+
+The output is similar, with the columns corresponding to 30 signatures:
+
+Tumor_Sample_Barcode | TMB | Signature.1 | Signature.2 | Signature.3
+-------------------- | --- | ----------- | ----------- | -----------
+TCGA.BH.A0EI         | 18  | 0.609       | 0.066       | 0.000
+TCGA.E9.A22B         | 50  | 0.508       | 0.217       | 0.000
+TCGA.OL.A5RV.        | 10  | 0.409       | 0.000       | 0.225 
+
+One can use a custom reference signature list (in the same format as the default version 3 file) via the optional argument `--sigfile SIGFILE`.
+
+### P-value estimation
+Optionally, statistical significance of the set of proportions (rows in the exposure output) can be estimated by permutation sampling. The exposure inference for each sample is repeated multiple times after permutation of catalog data. P-values are the fractions of permuted replicates whose proportions (**H0**) are not lower than those of the original (**H1**). The p-value estimation is turned on by the argument `--pvalue`. The number of permutations is 1,000 by default and can be set with `--nperm NPERM`. The output has the format:
+
+Tumor_Sample_Barcode | TMB | SBS2.observed | SBS2.pvalue | SBS3.observed | SBS3.pvalue | SBS4.observed | SBS4.pvalue
+-------------------- | --- | ------------- | ----------- | ------------- | ----------- | ------------- | -----------
+TCGA.BH.A0EI         | 18  | 1.0e-09       | 0.18        | 3.2e-13       | 0.94        | 1.5e-13       | 0.91
+TCGA.E9.A22B         | 50  | 0.18          | 0           | 1.6e-11       | 0.73        | 1.7e-13       | 0.95
+TCGA.OL.A5RV.        | 10  | 2.7e-12       | 0.61        | 1.1e-10       | 0.29        | 2.4e-11       | 0.54
+
+Note that p-value of 0 indicates that out of `NPERM` samples, none exceeded **H1**, and therefore must be interpreted as P < 1/`NPERM`.
