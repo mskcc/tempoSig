@@ -131,7 +131,7 @@ Note that p-value of 0 indicates that out of `NPERM` samples, none exceeded **H1
 
 For more detailed interactive usage and extra options, see the [vignettes](https://github.com/mskcc/tempoSig/tree/master/vignettes) (under construction).
 
-## Comparison
+## Benchmark
 
 In **Fig. 1**, the function [`simulateSpectra()`](master/man/simulateSpectra.md) was used with a breast cancer-like signature exposure profile (version 2) to generate simulated data of sample size 1,000 and mean TMB of 500 per genome. The **tempoSig** and [mutation-signatures](https://github.com/mskcc/mutation-signatures) were used to estimate exposures, which are identical. These estimates are broadly consistent with true exposure values. The accuracy improves with increasing mutation loads.
 <figure>
