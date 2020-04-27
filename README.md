@@ -133,7 +133,7 @@ For more detailed interactive usage and extra options, see the [vignettes](https
 
 ## Benchmark
 
-In **Fig. 1**, the function [`simulateSpectra()`](man/simulateSpectra.Rd) was used with a breast cancer-like signature exposure profile (version 2) to generate simulated data of sample size 1,000 and mean TMB of 500 per genome. The **tempoSig** and [mutation-signatures](https://github.com/mskcc/mutation-signatures) were used to estimate exposures, which are identical. These estimates are broadly consistent with true exposure values. The accuracy improves with increasing mutation loads.
+In **Fig. 1**, the function [`simulateSpectra()`](man/simulateSpectra.Rd) was used with a breast cancer-like signature exposure profile (version 2) to generate simulated data of sample size 100 and mean TMB of 500 per genome. The **tempoSig** and [mutation-signatures](https://github.com/mskcc/mutation-signatures) were used to estimate exposures, which are identical. These estimates are broadly consistent with true exposure values. The accuracy improves with increasing mutation loads.
 <figure>
 <img src="https://github.com/mskcc/tempoSig/blob/master/old/msig_vs_cli.png" align="center" height="432" width="432"/>
     <figcaption> Fig. 1: Comparison of exposure fits from tempoSig and mutation-signatures. Data were simulated with breast cancer-like signatures. True exposure values are also shown along the y-axis. </figcaption>
