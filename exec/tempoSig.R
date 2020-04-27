@@ -16,7 +16,11 @@ parser$add_argument('--pvalue', action = 'store_true', default = FALSE,
                     help = 'estimate p-values (default FALSE)')
 parser$add_argument('--nperm', dest = 'nperm', action = 'store', type = 'integer',
                     default = 1000, help = 'number of permutations for p-value estimation; default 1000')
+parser$add_argument('--seed', dest = 'seed', action = 'store', type = 'integer',
+                    help = 'random number seed')
 args <- parser$parse_args()
+
+if(!is.null(args$seed)) set.seed(args$seed)
 
 if(!is.null(args$sigfile)){  # custom signature file provided
   if(!file.exists(args$sigfile)) stop(paste0(args$sigfile, ' does not exist.'))
