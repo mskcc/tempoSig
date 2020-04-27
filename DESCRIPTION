@@ -1,8 +1,8 @@
 Package: tempoSig
 Type: Package
-Title: Mutation Signature Extraction
+Title: Maximum Likelihood Fitting of Mutational Catalog to Signatures
 Version: 0.2.0
-Author: Who wrote it
+Author: Jun Woo
 Maintainer: Jun Woo <wooh@mskcc.org>
 Depends: R (>= 3.6.0)
 Imports: gtools, Rcpp (>= 0.12.16), utils, argparse
