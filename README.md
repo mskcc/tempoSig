@@ -2,7 +2,7 @@
 Mutation Signature Extraction using Maximum Likelihood
 
 ## Overview
-**tempoSig** implements maximum likelihood-based extraction of mutational signature proportions of a set of mutation count data under a known set of input signature lists. The basic algorithm is the same as in [mutational-signatures](https://github.com/mskcc/mutation-signatures), but re-implemention in R/C++ here enables a substantial speed-up. This speed-up allows for the fast estimation of p-values via permutation-based sampling. The basic object (S4 class) can store input data, reference signature list, output exposure of samples, and p-values. Utilities for plotting and file ouput are also included. 
+**tempoSig** implements maximum likelihood-based extraction of mutational signature proportions of a set of mutation count data under a known set of input signature lists. The basic algorithm is the same as in [mutational-signatures](https://github.com/mskcc/mutation-signatures), but re-implemention in R/C++ here enables a substantial speed-up of the order of ~100x. This speed-up allows for the fast estimation of p-values via permutation-based sampling. The basic object (S4 class) can store input data, reference signature list, output exposure of samples, and p-values. Utilities for plotting and file ouput are also included. 
 
 ## Algorithm
 Input data is of the form of catalog matrix:
@@ -139,7 +139,7 @@ In **Fig. 1**, the function [`simulateSpectra()`](master/man/simulateSpectra.md)
     <figcaption> Fig. 1: Comparison of exposure fits from tempoSig and mutation-signatures. Data were simulated with breast cancer-like signatures. True exposure values are also shown along the y-axis. </figcaption>
 </figure>
 
-In **Fig. 2**, **tempoSig** and **mutation-signatures** running times were measured for varing sample sizes (fixed TMB of 500). The command-line version of **tempoSig** has overhead costs in speed compared to interactive R runs ([`extractSig()`](master/man/extractSig.md)), which decreases in relative magnitude with increasing sample size. Overall, the efficiency gain of **tempoSig** is up to ~400x.
+In **Fig. 2**, **tempoSig** and **mutation-signatures** running times were measured for varing sample sizes (fixed TMB of 500). The command-line version of **tempoSig** has overhead costs in speed compared to interactive R runs using the function [`extractSig()`](master/man/extractSig.md), which decreases in relative magnitude with increasing sample size. Overall, the efficiency gain of **tempoSig** is up to ~400x.
 
 <figure>
 <img src="https://github.com/mskcc/tempoSig/blob/master/old/time_cli.png" align="center" height="432" width="432"/>
