@@ -54,11 +54,11 @@ In OS-X,
 
     $ brew install gsl
 
-Install [Rcpp](https://cran.r-project.org/package=Rcpp) if not installed already, as well as [gtools](https://cran.r-project.org/package=gtools).
-
-**tempoSig** can then be installed in R by
+Dependencies include [Rcpp](https://cran.r-project.org/package=Rcpp) and [gtools](https://cran.r-project.org/package=gtools). Installing **tempoSig** via
 
     > devtools::install_github("mskcc/tempoSig")
+
+will also install dependencies.
 
 ## Quick start with command-line interface
 
