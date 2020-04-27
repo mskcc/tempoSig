@@ -43,7 +43,7 @@ SAMPLE_2             | 0.01 | 0.12 | 0.20
 
 Each row is a vector of proportions that add up to 1.
 
-To estimate p-values of significance of each proportion, the input data for each sample (columns of **X**) are randomly shuffled by permutation to sample the null distribution. The exposure vectors inferred from these null samples are compared with the observed vector from the original data, with the p-value defined as the proportion of null samples whose proprotions are higher than the observed values. 
+To estimate p-values of significance of each proportion, the input data for each sample (columns of **X**) are randomly shuffled by permutation to sample the null distribution. The exposure vectors inferred from these null samples are compared with the observed vector from the original data, with the p-value defined as the fraction of null samples whose proprotions are higher than the observed values. 
 
 ## Installation
 Compilation requires GNU Scientific Library [(GSL)](https://www.gnu.org/software/gsl/). In Ubuntu Linux,
