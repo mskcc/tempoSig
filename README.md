@@ -1,11 +1,11 @@
 # tempoSig
-Mutation Signature Extraction using Maximum Likelihood
+Mutational Signature Extraction using Maximum Likelihood
 
 ## Overview
 **tempoSig** implements maximum likelihood-based extraction of mutational signature proportions of a set of mutation count data under a known set of input signature lists. The basic algorithm is the same as in [mutational-signatures](https://github.com/mskcc/mutation-signatures), but re-implemention in R/C++ here enables a substantial speed-up of the order of ~100x. This speed-up allows for the fast estimation of p-values via permutation-based sampling. The basic object (S4 class) can store input data, reference signature list, output exposure of samples, and p-values. Utilities for plotting and file ouput are also included. 
 
 ## Algorithm
-Input data is of the form of catalog matrix:
+Input data are of the form of catalog matrix:
 
 Mutation context | Tumor Sample Barcode 1 | Tumor Sample Barcode 2
 ---------------- | ---------------------- | ----------------------
@@ -87,8 +87,8 @@ If you cloned the repository, the file is located at the `./exec` subdirectory o
       --sigfile SIGFILE  custom input reference signature file; overrides
                          --cosmic_v3/2
       --pvalue           estimate p-values (default FALSE)
-      --nperm NPERM      number of permutations for p-value estimation; default
-                         1000
+      --nperm NPERM      number of permutations for p-value estimation; default 1000
+      --seed SEED        random number seed
 
 Only two arguments are mandatory: `CATALOG` and `OUTPUT`, each specifying the paths of input catalog data and output file to be written. Both are tab-delimited text files with headers. See [tcga-brca_catalog.txt](https://github.com/mskcc/tempoSig/blob/master/inst/extdata/tcga-brca_catalog.txt) for a catalog file example. For instance,
 
