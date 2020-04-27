@@ -92,7 +92,7 @@ If you cloned the repository, the file is located at the `./exec` subdirectory o
 
 Only two arguments are mandatory: `CATALOG` and `OUTPUT`, each specifying the paths of input catalog data and output file to be written. Both are tab-delimited text files with headers. See [tcga-brca_catalog.txt](https://github.com/mskcc/tempoSig/blob/master/inst/extdata/tcga-brca_catalog.txt) for a catalog file example. For instance,
 
-    $ $PKG_PATH/exec/tempoSig.R $PKG_PATH/extdat/tcga-brca_catalog.txt output.txt
+    $ $PKG_PATH/exec/tempoSig.R $PKG_PATH/extdata/tcga-brca_catalog.txt output.txt
     
 fits catalog data for 10 samples in `tcga-brca_catalog.txt` to [COSMIC v3 signatures](https://github.com/mskcc/tempoSig/edit/master/inst/extdata/COSMIC_SBS_signatures-v3.txt) (default). The output file `output.txt` has the following format:
 
