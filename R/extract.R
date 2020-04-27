@@ -18,8 +18,7 @@
 #' data <- read.table(system.file('extdata', 'tcga-brca_catalog.txt', package='tempoSig'))
 #' b <- tempoSig(data)
 #' b <- extractSig(b, progress.bar = TRUE)
-#' b10 <- tempoSig(data[, 1:10])
-#' b10 <- extractSig(b10, compute.pval = TRUE, progress.bar = TRUE)
+#' b_pv <- extractSig(b, compute.pval = TRUE, progress.bar = TRUE)
 #' @export
 extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb = 5,
                        compute.pval = FALSE, nperm = 1000, progress.bar = FALSE){
@@ -48,16 +47,25 @@ extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb
   if(progress.bar) pb <- txtProgressBar(style = 3)
   for(i in seq(nsample)){
     spec <- spectrum[, i]
-    h[i, ] <- hi <- ifelse(method=='mle',
-      fitMLE(x = spec, ref = ref, itmax = itmax, tol = tol, min.tmb = min.tmb),
-      mutationalCone(catalog = spectrum[, i, drop=F], signature = ref, normalize = TRUE))
+    if(method=='mle')
+      h[i, ] <- hi <- fitMLE(x = spec, ref = ref, itmax = itmax, tol = tol, 
+                             min.tmb = min.tmb)
+    else
+      h[i, ] <- hi <- mutationalCone(catalog = spectrum[, i, drop=F], 
+                                     signature = ref, normalize = TRUE)
     if(compute.pval){
       perm <- matrix(1, nrow=nref, ncol=nperm)
-      for(k in seq(nperm)) # samples under null hypothesis
-        perm[, k] <- ifelse(method=='mle',
-          fitMLE(x = spec[sample(nnt)], ref = ref, itmax = itmax, tol = tol, min.tmb = min.tmb),
-          mutationalCone(catalog = spectrum[sample(nnt), i, drop=F], signature = ref, 
-                         normalize = TRUE))
+      for(k in seq(nperm)){   # samples under null hypothesis
+        rsp <- spec[sample(nnt)]
+        names(rsp) <- nt
+        if(method=='mle')
+          perm[, k] <- fitMLE(x = rsp, ref = ref, itmax = itmax, tol = tol, min.tmb = min.tmb)
+        else{
+          rsp <- matrix(rsp, ncol=1)
+          rownames(rsp) <- nt
+          perm[, k] <- mutationalCone(catalog = rsp, signature = ref, normalize = TRUE)
+        }
+      }
       pv[i, ] <- rowSums(perm >= hi) / nperm
     }
     if(progress.bar) setTxtProgressBar(pb, i/nsample)
@@ -92,6 +100,7 @@ fitMLE <- function(x, ref, itmax = 1000, tol = 1e-4, min.tmb = 5){
   x0 <- gtools::rdirichlet(n = 1, alpha = rep(10, num_sigs)) #initial guess
   p <- mlestimate(x, x0, ref, Itmax=itmax, Tol=tol)
   h <- p$x^2/sum(p$x^2)
+  names(h) <- colnames(ref)
 
   return(h)
 }
