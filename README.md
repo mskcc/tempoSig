@@ -139,9 +139,9 @@ In **Fig. 1**, the function [`simulateSpectra()`](master/man/simulateSpectra.md)
     <figcaption> Fig. 1: Comparison of exposure fits from tempoSig and mutation-signatures. Data were simulated with breast cancer-like signatures. True exposure values are also shown along the y-axis. </figcaption>
 </figure>
 
+In **Fig. 2**, **tempoSig** and **mutation-signatures** running times were measured for varing sample sizes (fixed TMB of 500). The command-line version of **tempoSig** has overhead costs in speed compared to interactive R runs ([`extractSig()`](master/man/extractSig.md)), which decreases in relative magnitude with increasing sample size. Overall, the efficiency gain of **tempoSig** is up to ~400x.
+
 <figure>
 <img src="https://github.com/mskcc/tempoSig/blob/master/old/time_cli.png" align="center" height="432" width="432"/>
     <figcaption> Fig. 2: Running time of tempoSig and mutation-signatures on data of varying sizes. Other conditions same as in Fig. 1. </figcaption>
 </figure>
-
-In **Fig. 2**, **tempoSig** and mutation-signatures running times were measured for varing sample sizes (fixed TMB of 500). The command-line version of **tempoSig** has overhead costs in speed compared to interactive R runs ([`extractSig()`](master/man/extractSig.md)), which decreases in relative magnitude with increasing sample size. Overall, the efficiency gain of **tempoSig** is ~400x.
