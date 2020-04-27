@@ -41,6 +41,5 @@ Use known signature list to find the most likely exposures in samples
 data <- read.table(system.file('extdata', 'tcga-brca_catalog.txt', package='tempoSig'))
 b <- tempoSig(data)
 b <- extractSig(b, progress.bar = TRUE)
-b10 <- tempoSig(data[, 1:10])
-b10 <- extractSig(b10, compute.pval = TRUE, progress.bar = TRUE)
+b_pv <- extractSig(b, compute.pval = TRUE, progress.bar = TRUE)
 }

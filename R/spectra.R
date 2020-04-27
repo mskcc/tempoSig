@@ -20,12 +20,12 @@
 #' K <- 5 # no. of processes
 #' W <- t(rdirichlet(n = K, alpha = rep(1, 96)))
 #' h <- rdirichlet(n = K, alpha = rep(5, K))[1,]
-#' x <- SimulateSpectra(W = W, h = h, N = 100)
+#' x <- simulateSpectra(W = W, h = h, N = 100)
 #' @export
-SimulateSpectra <- function(W, pzero = 0.5, nmut = 100, h, N = 10,
+simulateSpectra <- function(W, pzero = 0.5, nmut = 100, h, N = 10,
                             dilute.ultra = FALSE, min.mut = 1){
 
-  if(!is(W, 'matrix')) stop('W is not a matrix')
+  if(!is(W, 'matrix')) W <- as.matrix(W)
   m <- NROW(W)
   K <- NCOL(W)
   if(length(h) != K) stop('h is inconsistent with W')
@@ -48,7 +48,7 @@ SimulateSpectra <- function(W, pzero = 0.5, nmut = 100, h, N = 10,
   X <- matrix(rpois(n = m*N, lambda = xmean), nrow = m, ncol= N, byrow=FALSE)
   rownames(X) <- rownames(W)
   if(dilute.ultra)
-    X <- DiluteUltraMutated(X)
+    X <- diluteUltraMutated(X)
 
   x <- list(X=X, W=W, H=H)
   return(x)
@@ -56,7 +56,7 @@ SimulateSpectra <- function(W, pzero = 0.5, nmut = 100, h, N = 10,
 
 # Dilute ultra-mutated samples (Kim et al. DOI: 10.1038/hg.3557)
 
-DiluteUltraMutated <- function(X, maxiter=100){
+diluteUltraMutated <- function(X, maxiter=100){
 
   if(is.null(colnames(X)))
     colnames(X) <- seq(1, NCOL(X))
@@ -74,7 +74,7 @@ DiluteUltraMutated <- function(X, maxiter=100){
     colnames(m.ultra2) <- paste(colnames(m.ultra2), 2, sep='__')
     X <- cbind(m.normal, m.ultra1, m.ultra2)
   }
-  if(i>=maxiter) warning('Max. iteration reached in DiluteUltraMutated')
+  if(i>=maxiter) warning('Max. iteration reached in diluteUltraMutated')
 
   return(X)
 }
@@ -86,7 +86,7 @@ DiluteUltraMutated <- function(X, maxiter=100){
 #'
 #' @export
 #'
-Row2Column <- function(X){
+row2Column <- function(X){
 
   nt <- c("ACAA", "ACAC", "ACAG", "ACAT", "CCAA", "CCAC", "CCAG", "CCAT",
           "GCAA", "GCAC", "GCAG", "GCAT", "TCAA", "TCAC", "TCAG", "TCAT",
