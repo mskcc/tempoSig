@@ -87,8 +87,8 @@ If you cloned the repository, the file is located at the `./exec` subdirectory o
       --sigfile SIGFILE  custom input reference signature file; overrides
                          --cosmic_v3/2
       --pvalue           estimate p-values (default FALSE)
-      --nperm NPERM      number of permutations for p-value estimation; default
-                         1000
+      --nperm NPERM      number of permutations for p-value estimation; default 1000
+      --seed SEED        random number seed
 
 Only two arguments are mandatory: `CATALOG` and `OUTPUT`, each specifying the paths of input catalog data and output file to be written. Both are tab-delimited text files with headers. See [tcga-brca_catalog.txt](https://github.com/mskcc/tempoSig/blob/master/inst/extdata/tcga-brca_catalog.txt) for a catalog file example. For instance,
 
