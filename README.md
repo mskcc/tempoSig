@@ -2,7 +2,7 @@
 Mutation Signature Extraction using Maximum Likelihood
 
 ## Overview
-**tempoSig** implements maximum likelihood-based extraction of mutational signature proportions of a set of mutation count data under a known set of input signature lists. The basic algorithm is the same as in [mutational-signatures](https://github.com/mskcc/mutation-signatures), but re-implemention in R/C++ here enables a speed-up of ~400x. This speed-up allows for the fast estimation of p-values via permutation-based sampling. The basic object (S4 class) can store input data, reference signature list, output exposure of samples, and p-values. Utilities for plotting and file ouput are also included. 
+**tempoSig** implements maximum likelihood-based extraction of mutational signature proportions of a set of mutation count data under a known set of input signature lists. The basic algorithm is the same as in [mutational-signatures](https://github.com/mskcc/mutation-signatures), but re-implemention in R/C++ here enables a substantial speed-up. This speed-up allows for the fast estimation of p-values via permutation-based sampling. The basic object (S4 class) can store input data, reference signature list, output exposure of samples, and p-values. Utilities for plotting and file ouput are also included. 
 
 ## Algorithm
 Input data is of the form of catalog matrix:
@@ -129,4 +129,19 @@ Note that p-value of 0 indicates that out of `NPERM` samples, none exceeded **H1
 
 ## Documentation
 
-For more detailed interactive usage and extra options, see the [vignettes](https://github.com/mskcc/tempoSig/tree/master/vignettes).
+For more detailed interactive usage and extra options, see the [vignettes](https://github.com/mskcc/tempoSig/tree/master/vignettes) (under construction).
+
+## Comparison
+
+In **Fig. 1**, the function [`simulateSpectra()`](master/man/simulateSpectra.md) was used with a breast cancer-like signature exposure profile (version 2) to generate simulated data of sample size 1,000 and mean TMB of 500 per genome. The **tempoSig** and [mutation-signatures](https://github.com/mskcc/mutation-signatures) were used to estimate exposures, which are identical. These estimates are broadly consistent with true exposure values. The accuracy improves with increasing mutation loads.
+<figure>
+<img src="https://github.com/mskcc/tempoSig/blob/master/old/msig_vs_cli.png" align="center" height="432" width="432"/>
+    <figcaption> Fig. 1: Comparison of exposure fits from tempoSig and mutation-signatures. Data were simulated with breast cancer-like signatures. True exposure values are also shown along the y-axis. </figcaption>
+</figure>
+
+<figure>
+<img src="https://github.com/mskcc/tempoSig/blob/master/old/time_cli.png" align="center" height="432" width="432"/>
+    <figcaption> Fig. 2: Running time of tempoSig and mutation-signatures on data of varying sizes. Other conditions same as in Fig. 1. </figcaption>
+</figure>
+
+In **Fig. 2**, **tempoSig** and mutation-signatures running times were measured for varing sample sizes (fixed TMB of 500). The command-line version of **tempoSig** has overhead costs in speed compared to interactive R runs ([`extractSig()`](master/man/extractSig.md)), which decreases in relative magnitude with increasing sample size. Overall, the efficiency gain of **tempoSig** is ~400x.
