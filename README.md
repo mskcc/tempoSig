@@ -100,7 +100,7 @@ Tumor_Sample_Barcode | TMB | SBS2 | SBS3 | SBS4
 -------------------- | --- | ---- | ---- | ----
 TCGA.BH.A0EI         | 18  | 0.00 | 0.00 | 0.00
 TCGA.E9.A22B         | 50  | 0.18 | 0.00 | 0.00
-TCGA.OL.A5RV.        | 10  | 0.00 | 0.00 | 0.00 
+TCGA.OL.A5RV         | 10  | 0.00 | 0.00 | 0.00 
 
 The following will use the COSMIC version 2 signature:
 
