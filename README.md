@@ -27,7 +27,7 @@ Mutation context | SBS2 | SBS3 | SBS4
 A[C>A]A          | 6e-7 | 0.02 | 0.04
 A[C>A]C          | 2e-3 | 0.02 | 0.03
 
-Both [version 2](https://github.com/mskcc/tempoSig/edit/master/inst/extdata/COSMIC_SNV_signatures_v2.txt) and [version 3](https://github.com/mskcc/tempoSig/edit/master/inst/extdata/COSMIC_SBS_signatures-v3.txt) tables of [COSMIC signature lists](https://cancer.sanger.ac.uk/cosmic/signatures) are included.
+Both [version 2](https://github.com/mskcc/tempoSig/edit/master/inst/extdata/COSMIC_SNV_signatures_v2.txt) and [version 3](https://github.com/mskcc/tempoSig/edit/master/inst/extdata/COSMIC_SBS_signatures_v3.txt) tables of [COSMIC signature lists](https://cancer.sanger.ac.uk/cosmic/signatures) are included.
 
 The "refitting" (as opposed to de novo discovery) of signature propotion solves the non-negative matrix factorization problem
 
