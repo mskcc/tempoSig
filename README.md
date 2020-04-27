@@ -94,7 +94,7 @@ Only two arguments are mandatory: `CATALOG` and `OUTPUT`, each specifying the pa
 
     $ $PKG_PATH/exec/tempoSig.R $PKG_PATH/extdat/tcga-brca_catalog.txt output.txt
     
-This command fits catalog data for 10 samples in `tcga-brca_catalog.txt` to [COSMIC v3 signatures](https://github.com/mskcc/tempoSig/edit/master/inst/extdata/COSMIC_SBS_signatures-v3.txt) (default). The output file `output.txt` has the following format:
+fits catalog data for 10 samples in `tcga-brca_catalog.txt` to [COSMIC v3 signatures](https://github.com/mskcc/tempoSig/edit/master/inst/extdata/COSMIC_SBS_signatures-v3.txt) (default). The output file `output.txt` has the following format:
 
 Tumor_Sample_Barcode | TMB | SBS2 | SBS3 | SBS4
 -------------------- | --- | ---- | ---- | ----
