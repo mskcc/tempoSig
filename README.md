@@ -125,4 +125,8 @@ TCGA.BH.A0EI         | 18  | 1.0e-09       | 0.18        | 3.2e-13       | 0.94 
 TCGA.E9.A22B         | 50  | 0.18          | 0           | 1.6e-11       | 0.73        | 1.7e-13       | 0.95
 TCGA.OL.A5RV.        | 10  | 2.7e-12       | 0.61        | 1.1e-10       | 0.29        | 2.4e-11       | 0.54
 
-Note that p-value of 0 indicates that out of `NPERM` samples, none exceeded **H1**, and therefore must be interpreted as P < 1/`NPERM`.
+Note that p-value of 0 indicates that out of `NPERM` samples, none exceeded **H1**, and therefore must be interpreted as *P* < 1/`NPERM`.
+
+## Documentation
+
+For more detailed interactive usage and extra options, see the vignettes.
