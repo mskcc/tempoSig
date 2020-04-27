@@ -67,7 +67,7 @@ If you are not interested in interactive usages with more flexibility and functi
 
     > system.file('exec', 'tempoSig.R', package = 'tempoSig')
    
-If you cloned the repository, the file is located at the `./exec` subdirectory of the github main directory. We denote this package path directoy path as `PKG_PATH`. The command syntax is
+If you cloned the repository, the file is located at the `./exec` subdirectory of the github main directory. We denote this package directory path as `PKG_PATH`. The command syntax is
 
     $ $PKG_PATH/exec/tempoSig.R -h
     usage: ./tempoSig.R [-h] [--cosmic_v3 | --cosmic_v2] [--sigfile SIGFILE]
