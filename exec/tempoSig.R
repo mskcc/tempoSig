@@ -13,7 +13,7 @@ group$add_argument('--cosmic_v2', action = 'store_true',
 parser$add_argument('--sigfile', dest = 'sigfile', action = 'store',
                     help = 'custom input reference signature file; overrides --cosmic_v3/2')
 parser$add_argument('--pvalue', action = 'store_true', default = FALSE,
-                    help = 'estimate p-values')
+                    help = 'estimate p-values (default FALSE)')
 parser$add_argument('--nperm', dest = 'nperm', action = 'store', type = 'integer',
                     default = 1000, help = 'number of permutations for p-value estimation; default 1000')
 args <- parser$parse_args()
@@ -28,8 +28,6 @@ if(!is.null(args$sigfile)){  # custom signature file provided
 }
 
 data <- read.table(args$catalog, header = TRUE, sep = '\t')
-print(head(data))
-stop()
 x <- tempoSig(data = data, signat = sig)
 x <- extractSig(object = x, compute.pval = args$pvalue, nperm = args$nperm, progress.bar = TRUE)
 writeExposure(object = x, output = args$output, sep = '\t')
