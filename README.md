@@ -71,7 +71,7 @@ If you cloned the repository, the file is located at the `./exec` subdirectory o
 
     $ $PKG_PATH/exec/tempoSig.R -h
     usage: ./tempoSig.R [-h] [--cosmic_v3 | --cosmic_v2] [--sigfile SIGFILE]
-                        [--pvalue] [--nperm NPERM]
+                        [--pvalue] [--nperm NPERM] [--seed SEED]
                         CATALOG OUTPUT
 
     Fit mutational catalog to signatures
