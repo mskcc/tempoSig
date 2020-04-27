@@ -54,7 +54,7 @@ In OS-X,
 
     $ brew install gsl
 
-Dependencies include [Rcpp](https://cran.r-project.org/package=Rcpp), [gtools](https://cran.r-project.org/package=gtools), and [coneproj](https://cran.r-project.org/package=coneproj). Installing **tempoSig** via
+Dependencies include [Rcpp](https://cran.r-project.org/package=Rcpp), [gtools](https://cran.r-project.org/package=gtools), [argparse](https://cran.r-project.org/package=argparse), and [coneproj](https://cran.r-project.org/package=coneproj). Installing **tempoSig** via
 
     > devtools::install_github("mskcc/tempoSig")
 
