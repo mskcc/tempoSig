@@ -129,4 +129,4 @@ Note that p-value of 0 indicates that out of `NPERM` samples, none exceeded **H1
 
 ## Documentation
 
-For more detailed interactive usage and extra options, see the [vignettes] (https://github.com/mskcc/tempoSig/tree/master/vignettes)
+For more detailed interactive usage and extra options, see the [vignettes] (https://github.com/mskcc/tempoSig/tree/master/vignettes).
