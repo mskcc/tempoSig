@@ -9,5 +9,6 @@ parser$add_argument('catalog', metavar = 'CATALOG',
 args <- parser$parse_args()
 
 maf <- maftools::read.maf(args$maf)
-catalog <- t(maftools::trinucleotideMatrix(maf = maf, prefi = 'chr', add = TRUE, ref_genome = 'BSgenome.Hsapiens.UCSC.hg19')$nmf_matrix)
+catalog <- t(maftools::trinucleotideMatrix(maf = maf, prefix = 'chr', add = TRUE, 
+               ref_genome = 'BSgenome.Hsapiens.UCSC.hg19')$nmf_matrix)
 write.table(catalog, file = args$catalog, quote = F, sep = '\t')
