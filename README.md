@@ -27,7 +27,7 @@ Mutation context | SBS1 | SBS2 | SBS3 | SBS4
 A[C>A]A          | 9e-4 | 6e-7 | 0.02 | 0.04
 A[C>A]C          | 2e-3 | 1e-4 | 0.02 | 0.03
 
-Both [version 2](https://github.com/mskcc/tempoSig/edit/master/inst/extdata/COSMIC_SNV_signatures_v2.txt) and [version 3](https://github.com/mskcc/tempoSig/edit/master/inst/extdata/COSMIC_SBS_signatures_v3.txt) tables of [COSMIC signature lists](https://cancer.sanger.ac.uk/cosmic/signatures) are included.
+Both [version 2](https://github.com/mskcc/tempoSig/blob/master/inst/extdata/cosmic_snv_signatures_v2.txt) and [version 3](https://github.com/mskcc/tempoSig/blob/master/inst/extdata/cosmic_sigProfiler_SBS_signatures.txt) tables of [COSMIC signature lists](https://cancer.sanger.ac.uk/cosmic/signatures) are included.
 
 The "refitting" (as opposed to de novo discovery) of signature propotion solves the non-negative matrix factorization problem
 
@@ -70,9 +70,10 @@ If you are not interested in interactive usages with more flexibility and functi
 If you cloned the repository, the file is located at the `./exec` subdirectory of the github main directory. We denote this package directory path as `PKG_PATH`. The command syntax is
 
     $ $PKG_PATH/exec/tempoSig.R -h
-    usage: ./tempoSig.R [-h] [--cosmic_v3 | --cosmic_v2] [--sigfile SIGFILE]
-                        [--pvalue] [--nperm NPERM] [--seed SEED]
-                        CATALOG OUTPUT
+    usage: ./tempoSig.R [-h] [--cosmic_v3 | --cosmic_v3_exome | --cosmic_v2]
+                    [--sigfile SIGFILE] [--pvalue] [--nperm NPERM]
+                    [--seed SEED]
+                    CATALOG OUTPUT
 
     Fit mutational catalog to signatures
 
@@ -83,18 +84,20 @@ If you cloned the repository, the file is located at the `./exec` subdirectory o
     optional arguments:
       -h, --help         show this help message and exit
       --cosmic_v3        use COSMIC v3 reference signatures (default)
+      --cosmic_v3_exome  use COSMIC v3 exome reference signatures
       --cosmic_v2        use COSMIC v2 reference signatures
       --sigfile SIGFILE  custom input reference signature file; overrides
                          --cosmic_v3/2
       --pvalue           estimate p-values (default FALSE)
-      --nperm NPERM      number of permutations for p-value estimation; default 1000
+      --nperm NPERM      number of permutations for p-value estimation; default
+                         1000
       --seed SEED        random number seed
-
+        
 Only two arguments are mandatory: `CATALOG` and `OUTPUT`, each specifying the paths of input catalog data and output file to be written. Both are tab-delimited text files with headers. See [tcga-brca_catalog.txt](https://github.com/mskcc/tempoSig/blob/master/inst/extdata/tcga-brca_catalog.txt) for a catalog file example. For instance,
 
     $ $PKG_PATH/exec/tempoSig.R $PKG_PATH/extdata/tcga-brca_catalog.txt output.txt
     
-fits catalog data for 10 samples in `tcga-brca_catalog.txt` to [COSMIC v3 signatures](https://github.com/mskcc/tempoSig/edit/master/inst/extdata/COSMIC_SBS_signatures-v3.txt) (default). The output file `output.txt` has the following format:
+fits catalog data for 10 samples in `tcga-brca_catalog.txt` to [COSMIC v3 signatures](https://github.com/mskcc/tempoSig/edit/master/inst/extdata/cosmic_sigProfiler_SBS_signatures.txt) (default). The output file `output.txt` has the following format:
 
 Tumor_Sample_Barcode | TMB | SBS1 | SBS2 | SBS3 | SBS4
 -------------------- | --- | ---- | ---- | ---- | ----
