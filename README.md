@@ -22,10 +22,10 @@ Mutation context is the set of categories to which mutation data from sequencing
 
 The other input is the set of reference signature proportions:
 
-Mutation context | SBS2 | SBS3 | SBS4
----------------- | ---- | ---- | ----
-A[C>A]A          | 6e-7 | 0.02 | 0.04
-A[C>A]C          | 2e-3 | 0.02 | 0.03
+Mutation context | SBS1 | SBS2 | SBS3 | SBS4
+---------------- | ---- | ---- | ---- | ----
+A[C>A]A          | 9e-4 | 6e-7 | 0.02 | 0.04
+A[C>A]C          | 2e-3 | 1e-4 | 0.02 | 0.03
 
 Both [version 2](https://github.com/mskcc/tempoSig/edit/master/inst/extdata/COSMIC_SNV_signatures_v2.txt) and [version 3](https://github.com/mskcc/tempoSig/edit/master/inst/extdata/COSMIC_SBS_signatures_v3.txt) tables of [COSMIC signature lists](https://cancer.sanger.ac.uk/cosmic/signatures) are included.
 
@@ -36,14 +36,14 @@ The "refitting" (as opposed to de novo discovery) of signature propotion solves 
 where **X** is the catalog matrix, **W** is the signature matrix (assumed to be known and fixed), and **H** is the exposure matrix of dimension (no. of reference signatures x no. of samples). The maximum likelihood estimation (MLE) algorithm formulates this problem in terms of a multinomial statistical model with observed counts **X** of categorical groups (trinucleotide contexts) mixed by given fixed proportions **W**. **tempoSig** uses the quasi-Newton [Broyden-Fletcher-Goldfarb-Shanno (BFGS) algorithm](https://www.gnu.org/software/gsl/doc/html/multimin.html) for multi-dimensional optimization.
 The output matrix is the transpose of **H**:
 
-Tumor Sample Barcode | SBS2 | SBS3 | SBS4
--------------------- | ---- | ---- | ----
-SAMPLE_1             | 0.00 | 0.01 | 0.25
-SAMPLE_2             | 0.01 | 0.12 | 0.20
+Tumor Sample Barcode | SBS1 | SBS2 | SBS3 | SBS4
+-------------------- | ---- | ---- | ---- | ----
+SAMPLE_1             | 0.37 | 0.01 | 0.00 | 0.00
+SAMPLE_2             | 0.31 | 0.18 | 0.00 | 0.00
 
 Each row is a vector of proportions that add up to 1.
 
-To estimate p-values of significance of each proportion, the input data for each sample (columns of **X**) are randomly shuffled by permutation to sample the null distribution. The exposure vectors inferred from these null samples are compared with the observed vector from the original data, with the p-value defined as the fraction of null samples whose proprotions are higher than the observed values. 
+To estimate p-values of significance of each proportion, the input data for each sample (columns of **X**) are randomly shuffled by permutation to sample the null distribution. The exposure vectors inferred from these null samples are compared with the observed vector from the original data, with the p-value defined as the fraction of null samples whose proprotions are higher than the observed values.
 
 ## Installation
 Compilation requires GNU Scientific Library [(GSL)](https://www.gnu.org/software/gsl/). In Ubuntu Linux,
@@ -96,11 +96,11 @@ Only two arguments are mandatory: `CATALOG` and `OUTPUT`, each specifying the pa
     
 fits catalog data for 10 samples in `tcga-brca_catalog.txt` to [COSMIC v3 signatures](https://github.com/mskcc/tempoSig/edit/master/inst/extdata/COSMIC_SBS_signatures-v3.txt) (default). The output file `output.txt` has the following format:
 
-Tumor_Sample_Barcode | TMB | SBS2 | SBS3 | SBS4
--------------------- | --- | ---- | ---- | ----
-TCGA.BH.A0EI         | 18  | 0.00 | 0.00 | 0.00
-TCGA.E9.A22B         | 50  | 0.18 | 0.00 | 0.00
-TCGA.OL.A5RV         | 10  | 0.00 | 0.00 | 0.00 
+Tumor_Sample_Barcode | TMB | SBS1 | SBS2 | SBS3 | SBS4
+-------------------- | --- | ---- | ---- | ---- | ----
+TCGA.BH.A0EI         | 18  | 0.37 | 0.00 | 0.00 | 0.00
+TCGA.E9.A22B         | 50  | 0.31 | 0.18 | 0.00 | 0.00
+TCGA.OL.A5RV         | 10  | 0.34 | 0.00 | 0.00 | 0.00 
 
 The following will use the COSMIC version 2 signature:
 
@@ -119,11 +119,11 @@ One can use a custom reference signature list (in the same format as the default
 ### P-value estimation
 Optionally, statistical significance of the set of proportions (rows in the exposure output) can be estimated by permutation sampling. The exposure inference for each sample is repeated multiple times after permutation of catalog data. P-values are the fractions of permuted replicates whose proportions (**H0**) are not lower than those of the original (**H1**). The p-value estimation is turned on by the argument `--pvalue`. The number of permutations is 1,000 by default and can be set with `--nperm NPERM`. The output has the format:
 
-Tumor_Sample_Barcode | TMB | SBS2.observed | SBS2.pvalue | SBS3.observed | SBS3.pvalue | SBS4.observed | SBS4.pvalue
--------------------- | --- | ------------- | ----------- | ------------- | ----------- | ------------- | -----------
-TCGA.BH.A0EI         | 18  | 1.0e-09       | 0.18        | 3.2e-13       | 0.94        | 1.5e-13       | 0.91
-TCGA.E9.A22B         | 50  | 0.18          | 0           | 1.6e-11       | 0.73        | 1.7e-13       | 0.95
-TCGA.OL.A5RV         | 10  | 2.7e-12       | 0.61        | 1.1e-10       | 0.29        | 2.4e-11       | 0.54
+Tumor_Sample_Barcode | TMB | SBS1.observed | SBS1.pvalue   | SBS2.observed | SBS2.pvalue
+-------------------- | --- | ------------- |-------------- | ------------- | -----------
+TCGA.BH.A0EI         | 18  | 0.37          | 0             | 0.0085        | 0.15              
+TCGA.E9.A22B         | 50  | 0.31          | 0             | 0.18          | 0              
+TCGA.OL.A5RV         | 10  | 0.34          | 0             | 2.6e-11       | 0.30        
 
 Note that p-value of 0 indicates that out of `NPERM` samples, none exceeded **H1**, and therefore must be interpreted as *P* < 1/`NPERM`.
 
