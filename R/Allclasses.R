@@ -45,7 +45,7 @@ tempoSig <- function(data, signat = NULL){
 
   if(!is(data, 'matrix')) data <- as.matrix(data)
   if(is.null(signat))
-    signat <- as.matrix(read.table(system.file('extdata/COSMIC_SBS_signatures_v3.txt',
+    signat <- as.matrix(read.table(system.file('extdata/cosmic_sigProfiler_SBS_signatures.txt',
                             package = 'tempoSig')))
   else if(is.character(signat)){
     if(!file.exists(signat)) stop(paste0('File ',signat,' does not exist'))

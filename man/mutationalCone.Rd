@@ -4,7 +4,7 @@
 \alias{mutationalCone}
 \title{Refit spectra using MutationalCone}
 \usage{
-mutationalCone(catalog, signatures = "COSMIC.v2", normalize = FALSE)
+mutationalCone(catalog, signatures = "cosmic_v3", normalize = FALSE)
 }
 \arguments{
 \item{catalog}{Input matrix of dimension \code{(M, N)}, where

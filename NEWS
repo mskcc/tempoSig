@@ -1,3 +1,13 @@
+tempoSig 0.2.1
+===============
+Changes (04/29/20):
+
+* Changed names of reference signatures and added exome ref.:
+
+  --cosmic_v3 (default): cosmic_sigProfiler_SBS_signatures.txt
+  --cosmic_v3_exome:     cosmic_sigProfiler_exome_SBS_signatures.txt
+  --cosmic_v2:           cosmic_snv_signatures_v2.txt
+
 tempoSig 0.2.0
 ================
 Changes (04/26/20):
