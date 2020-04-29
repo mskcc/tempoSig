@@ -20,7 +20,7 @@
 #' b <- extractSig(b, progress.bar = TRUE)
 #' b_pv <- extractSig(b, compute.pval = TRUE, progress.bar = TRUE)
 #' @export
-extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb = 5,
+extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb = 2,
                        compute.pval = FALSE, nperm = 1000, progress.bar = FALSE){
 
   if(!is(object, 'tempoSig')) stop('object is not of class tempoSig')

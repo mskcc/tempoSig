@@ -9,7 +9,7 @@ extractSig(
   method = "mle",
   itmax = 1000,
   tol = 1e-04,
-  min.tmb = 5,
+  min.tmb = 2,
   compute.pval = FALSE,
   nperm = 1000,
   progress.bar = FALSE
