@@ -46,10 +46,14 @@ extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb
 
   if(progress.bar) pb <- txtProgressBar(style = 3)
   for(i in seq(nsample)){
+    if(mut.load[i] < min.tmb){ 
+      h[i, ] <- rep(NA, nref)
+      if(compute.pval) pv[i, ] <- rep(NA, nref)
+      next()
+    }
     spec <- spectrum[, i]
     if(method=='mle')
-      h[i, ] <- hi <- fitMLE(x = spec, ref = ref, itmax = itmax, tol = tol, 
-                             min.tmb = min.tmb)
+      h[i, ] <- hi <- fitMLE(x = spec, ref = ref, itmax = itmax, tol = tol)
     else
       h[i, ] <- hi <- mutationalCone(catalog = spectrum[, i, drop=F], 
                                      signature = ref, normalize = TRUE)
@@ -59,7 +63,7 @@ extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb
         rsp <- spec[sample(nnt)]
         names(rsp) <- nt
         if(method=='mle')
-          perm[, k] <- fitMLE(x = rsp, ref = ref, itmax = itmax, tol = tol, min.tmb = min.tmb)
+          perm[, k] <- fitMLE(x = rsp, ref = ref, itmax = itmax, tol = tol)
         else{
           rsp <- matrix(rsp, ncol=1)
           rownames(rsp) <- nt
@@ -85,17 +89,12 @@ extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb
 #'            and signatures in columns
 #' @param itmax Maximum number of iterations
 #' @param tol Tolerance of convergence
-#' @param min.tmb Minimum mutation counts; if lower than this, \code{NA} is returned
 #' @return Vector of estimated signature exposure proportions
 #' @export
-fitMLE <- function(x, ref, itmax = 1000, tol = 1e-4, min.tmb = 5){
+fitMLE <- function(x, ref, itmax = 1000, tol = 1e-4){
 
   num_sigs <- NCOL(ref)
   num_muts <- sum(x)
-  if(num_muts < min.tmb){
-    warning(paste0('Sample has less than ', min.tmb, ' mutations.'))
-    return(rep(NA, num_muts))
-  }
   x <- x / num_muts
   x0 <- gtools::rdirichlet(n = 1, alpha = rep(10, num_sigs)) #initial guess
   p <- mlestimate(x, x0, ref, Itmax=itmax, Tol=tol)

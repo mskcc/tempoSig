@@ -59,23 +59,31 @@ plotExposure <- function(object, sample.id, cutoff = 1e-3, ...){
 #' @param object Object of class \code{tempoSig}
 #' @param output File name of the output
 #' @param sep Delimiter, either space or tab.
+#' @param rm.na Remove rows with NAs (mutation load below minimum)
 #'
 #' @export
-writeExposure <- function(object, output, sep = '\t'){
+writeExposure <- function(object, output, sep = '\t', rm.na = TRUE){
 
   if(!is(object, 'tempoSig')) stop('Object is not of class tempoSig')
   if(!is.character(output)) stop('Output file name must be characters')
   if(!sep %in% c(' ','\t')) stop('Delimiter must be either space or tab')
   expo <- expos(object)
   if(all(dim(expo) == 0)) stop('Exposure in object empty')
+  
+  if(rm.na){
+    bad <- apply(expo, 1, function(x){all(is.na(x))})
+    expo <- expo[!bad, ]
+    tmba <- tmb(object)[!bad]
+  } else tmba <- tmb(object)
 
   is.pv <- !all(dim(pvalue(object)) == 0)   # pvalue is not empty
   if(!is.pv)
-    out <- cbind(data.frame(Tumor_Sample_Barcode = rownames(expo), TMB = tmb(object)),
-               as.data.frame(expo))
+    out <- cbind(data.frame(Tumor_Sample_Barcode = rownames(expo), TMB = tmba),
+                 as.data.frame(expo))
   else{
-    out <- data.frame(Tumor_Sample_Barcode = rownames(expo), TMB = tmb(object))
+    out <- data.frame(Tumor_Sample_Barcode = rownames(expo), TMB = tmba)
     pv <- pvalue(object)
+    pv <- pv[!bad, ]
     sig.names <- colnames(expo)
     for(k in seq(NCOL(expo))){
       tmp <- data.frame(expo[,k], pv[,k])

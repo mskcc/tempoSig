@@ -4,7 +4,7 @@
 \alias{fitMLE}
 \title{Maximum likelihood inference of signature proportions}
 \usage{
-fitMLE(x, ref, itmax = 1000, tol = 1e-04, min.tmb = 5)
+fitMLE(x, ref, itmax = 1000, tol = 1e-04)
 }
 \arguments{
 \item{x}{Vector of observed proportions of mutation contexts}
@@ -15,8 +15,6 @@ and signatures in columns}
 \item{itmax}{Maximum number of iterations}
 
 \item{tol}{Tolerance of convergence}
-
-\item{min.tmb}{Minimum mutation counts; if lower than this, \code{NA} is returned}
 }
 \value{
 Vector of estimated signature exposure proportions
