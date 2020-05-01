@@ -119,6 +119,22 @@ TCGA.OL.A5RV         | 10  | 0.409       | 0.000       | 0.225
 
 One can use a custom reference signature list (in the same format as the default version 3 file) via the optional argument `--sigfile SIGFILE`.
 
+### Catalog matrix generation
+
+If a MAF file contains the column `Ref_Tri` [trinucleotide contexts surrounding the mutation site; use `make_trinuc_maf.py` script in [mutation-signatures](https://github.com/mskcc/mutation-signatures)], the catalog matrix can also be generated using [maf2cat()](https://github.com/mskcc/tempoSig/blob/master/man/maf2cat.Rd) or its command-line wrapper:
+
+    $ ./maf2cat2.R -h
+    usage: ./maf2cat2.R [-h] MAF CATALOG
+
+    Construct mutational catalog from MAF file with Ref_Tri column
+
+    positional arguments:
+      MAF         input MAF file
+      CATALOG     output catalog file
+
+    optional arguments:
+      -h, --help  show this help message and exit
+
 ### P-value estimation
 Optionally, statistical significance of the set of proportions (rows in the exposure output) can be estimated by permutation sampling. The exposure inference for each sample is repeated multiple times after permutation of catalog data. P-values are the fractions of permuted replicates whose proportions (**H0**) are not lower than those of the original (**H1**). The p-value estimation is turned on by the argument `--pvalue`. The number of permutations is 1,000 by default and can be set with `--nperm NPERM`. The output has the format:
 
