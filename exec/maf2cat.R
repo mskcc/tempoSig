@@ -1,4 +1,5 @@
 #!/usr/bin/env Rscript
+# Convert maf file into catalog using maftools
 library('argparse')
 suppressMessages(library('BSgenome.Hsapiens.UCSC.hg19'))
 parser <- ArgumentParser(description = 'Construct mutational catalog from MAF file')

@@ -94,3 +94,62 @@ writeExposure <- function(object, output, sep = '\t', rm.na = TRUE){
   write.table(out, file=output, sep = sep, row.names = F, quote = F)
   return(invisible(object))
 }
+
+#' Generate Mutation Catalog from MAF file
+#' 
+#' Input is MAF file and the corresponding trinucleotide catalog matrix is generated
+#' 
+#' @param maf MAF file name. It must contain a column named \code{Ref_Tri} 
+#'        containing the trinucleotide sequences surrounding the mutation site.
+#'        If the mutation site reference allele is \code{A, G}, the \code{Ref_Tri}
+#'        is the complement sequence of the trinucleotides, such that its central
+#'        allele is always \code{C, T}.
+#'        
+#' @return Count matrix with mutation contexts in rows and \code{Tumor_Sample_Barcode}
+#'         in columns.
+#' @export
+maf2cat <- function(maf){
+  
+  if(!file.exists(maf)) stop(paste0('File ', maf, ' does not exist'))
+  x <- data.table::fread(maf)
+  x <- as.data.frame(x)
+  col <- colnames(x)
+  if(!'Ref_Tri' %in% col) stop('Column Ref_Tri does not exist in MAF')
+  if('End_position' %in% col){
+    col[col=='End_position'] <- 'End_Position'
+    colnames(x) <- col
+  } 
+  x <- x[x$Variant_Type == 'SNP', 
+         c('Tumor_Sample_Barcode','Chromosome', 'Start_Position', 'End_Position',
+           'Reference_Allele', 'Tumor_Seq_Allele2', 'Ref_Tri')] 
+  x <- x[!duplicated(x) & x$Ref_Tri != '',]
+  
+  mut <- rep('', NROW(x))
+  for(i in seq(NROW(x))){
+     w <- c(t(x[i,c('Reference_Allele', 'Tumor_Seq_Allele2')]), 
+            strsplit(as.character(x[i, 'Ref_Tri']), split='')[[1]])
+     if(w[1] %in% c('A','G')) 
+       w[1:2] <- ntdag(w[1:2])  # Ref_Tri is already pyrimidine at the center
+     mut[i] <- paste(c(w[3], '[', w[1], '>', w[2], ']', w[5]), collapse='')
+  }
+  
+  tmut <- table(mut, x$Tumor_Sample_Barcode)
+  tmut <- tmut[match(trinucleotides(), rownames(tmut)), ]
+  tmut <- as.data.frame.matrix(tmut)
+  
+  return(tmut)
+}
+
+# nucleotide complement
+ntdag <- function(nt){
+  
+  z <- nt
+  for(i in seq_along(nt)){
+    if(nt[i]=='A') z[i] <- 'T'
+    else if(nt[i]=='T') z[i] <- 'A'
+    else if(nt[i]=='G') z[i] <- 'C'
+    else if(nt[i]=='C') z[i] <- 'G'
+    else stop('Unknown nucleotide in maf file')
+  }
+  return(z)
+}
