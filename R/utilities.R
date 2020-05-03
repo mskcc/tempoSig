@@ -72,7 +72,7 @@ writeExposure <- function(object, output, sep = '\t', rm.na = TRUE){
   
   if(rm.na){
     bad <- apply(expo, 1, function(x){all(is.na(x))})
-    expo <- expo[!bad, ]
+    expo <- expo[!bad, , drop = FALSE]
     tmba <- tmb(object)[!bad]
   } else tmba <- tmb(object)
 
@@ -83,7 +83,7 @@ writeExposure <- function(object, output, sep = '\t', rm.na = TRUE){
   else{
     out <- data.frame(Tumor_Sample_Barcode = rownames(expo), TMB = tmba)
     pv <- pvalue(object)
-    pv <- pv[!bad, ]
+    pv <- pv[!bad, , drop = FALSE]
     sig.names <- colnames(expo)
     for(k in seq(NCOL(expo))){
       tmp <- data.frame(expo[,k], pv[,k])
@@ -133,8 +133,8 @@ maf2cat <- function(maf){
      mut[i] <- paste(c(w[3], '[', w[1], '>', w[2], ']', w[5]), collapse='')
   }
   
+  mut <- factor(mut, levels=trinucleotides(), ordered = TRUE)
   tmut <- table(mut, x$Tumor_Sample_Barcode)
-  tmut <- tmut[match(trinucleotides(), rownames(tmut)), ]
   tmut <- as.data.frame.matrix(tmut)
   
   return(tmut)

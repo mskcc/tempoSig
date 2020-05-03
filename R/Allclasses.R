@@ -57,7 +57,7 @@ tempoSig <- function(data, signat = NULL){
   idx <- match(nts, ntd)
   if(sum(is.na(idx)) > 0 | sum(duplicated(idx)) > 0)
     stop('Row names in data do not match reference signatures')
-  data <- data[idx, ]
+  data <- data[idx, , drop = FALSE]
 
   x <- new('tempoSig', catalog = data, signat = signat)
   x@tmb <- colSums(data)

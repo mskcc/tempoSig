@@ -35,7 +35,7 @@ extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb
   idx <- match(nt, rownames(spectrum))
   if(sum(is.na(idx)) > 0 | sum(duplicated(idx)) > 0)
     stop('Mutation types in spectrum do not match reference.')
-  spectrum <- spectrum[idx, ]  # rearrange rows to match reference
+  spectrum <- spectrum[idx, , drop = FALSE]  # rearrange rows to match reference
 
   nsample <- length(tmb(object))
   nref <- NCOL(ref)
@@ -69,10 +69,10 @@ extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb
           rownames(rsp) <- nt
           perm[, k] <- mutationalCone(catalog = rsp, signature = ref, normalize = TRUE)
         }
+        if(progress.bar) setTxtProgressBar(pb, i*k/(nsample*nperm))
       }
       pv[i, ] <- rowSums(perm >= hi) / nperm
-    }
-    if(progress.bar) setTxtProgressBar(pb, i/nsample)
+    } else if(progress.bar) setTxtProgressBar(pb, i/nsample)
   }
   if(progress.bar) close(pb)
 
