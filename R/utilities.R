@@ -91,6 +91,7 @@ writeExposure <- function(object, output, sep = '\t', rm.na = TRUE){
       out <- cbind(out, tmp)
     }
   }
+  colnames(out)[1:2] <- c('Sample Name', 'Number of Mutations') # compatibility
   write.table(out, file=output, sep = sep, row.names = F, quote = F)
   return(invisible(object))
 }
