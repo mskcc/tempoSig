@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 # Convert maf file with Ref_Tri column into catalog
 library('argparse')
-library('tempoSig', lib.loc='/usr/local/lib/R/site-library')
+library('tempoSig')
 
 parser <- ArgumentParser(description = 'Construct mutational catalog from MAF file with Ref_Tri column')
 parser$add_argument('maf', metavar = 'MAF',

@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 library('argparse')
-library('tempoSig', lib.loc='/usr/local/lib/R/site-library')
+library('tempoSig')
 parser <- ArgumentParser(description = 'Fit mutational catalog to signatures')
 parser$add_argument('catalog', metavar = 'CATALOG', 
                     help = 'input catalog data file')
