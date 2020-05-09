@@ -99,11 +99,11 @@ Only two arguments are mandatory: `CATALOG` and `OUTPUT`, each specifying the pa
     
 fits catalog data for 10 samples in `tcga-brca_catalog.txt` to [COSMIC v3 signatures](https://github.com/mskcc/tempoSig/edit/master/inst/extdata/cosmic_sigProfiler_SBS_signatures.txt) (default). The output file `output.txt` has the following format:
 
-Tumor_Sample_Barcode | TMB | SBS1 | SBS2 | SBS3 | SBS4
--------------------- | --- | ---- | ---- | ---- | ----
-TCGA.BH.A0EI         | 18  | 0.37 | 0.00 | 0.00 | 0.00
-TCGA.E9.A22B         | 50  | 0.31 | 0.18 | 0.00 | 0.00
-TCGA.OL.A5RV         | 10  | 0.34 | 0.00 | 0.00 | 0.00 
+Sample Name    | Number of Mutations | SBS1 | SBS2 | SBS3 | SBS4
+-------------- | ------------------- | ---- | ---- | ---- | ----
+TCGA.BH.A0EI   | 18                  | 0.37 | 0.00 | 0.00 | 0.00
+TCGA.E9.A22B   | 50                  | 0.31 | 0.18 | 0.00 | 0.00
+TCGA.OL.A5RV   | 10                  | 0.34 | 0.00 | 0.00 | 0.00 
 
 The following will use the COSMIC version 2 signature:
 
@@ -111,11 +111,11 @@ The following will use the COSMIC version 2 signature:
 
 The output is similar, with the columns corresponding to 30 signatures:
 
-Tumor_Sample_Barcode | TMB | Signature.1 | Signature.2 | Signature.3
--------------------- | --- | ----------- | ----------- | -----------
-TCGA.BH.A0EI         | 18  | 0.609       | 0.066       | 0.000
-TCGA.E9.A22B         | 50  | 0.508       | 0.217       | 0.000
-TCGA.OL.A5RV         | 10  | 0.409       | 0.000       | 0.225 
+Sample Name    | Number of Mutations | Signature.1 | Signature.2 | Signature.3
+-------------- | ------------------- | ----------- | ----------- | -----------
+TCGA.BH.A0EI   | 18                  | 0.609       | 0.066       | 0.000
+TCGA.E9.A22B   | 50                  | 0.508       | 0.217       | 0.000
+TCGA.OL.A5RV   | 10                  | 0.409       | 0.000       | 0.225 
 
 One can use a custom reference signature list (in the same format as the default version 3 file) via the optional argument `--sigfile SIGFILE`.
 
@@ -138,11 +138,11 @@ If a MAF file contains the column `Ref_Tri` [trinucleotide contexts surrounding 
 ### P-value estimation
 Optionally, statistical significance of the set of proportions (rows in the exposure output) can be estimated by permutation sampling. The exposure inference for each sample is repeated multiple times after permutation of catalog data. P-values are the fractions of permuted replicates whose proportions (**H0**) are not lower than those of the original (**H1**). The p-value estimation is turned on by the argument `--pvalue`. The number of permutations is 1,000 by default and can be set with `--nperm NPERM`. The output has the format:
 
-Tumor_Sample_Barcode | TMB | SBS1.observed | SBS1.pvalue   | SBS2.observed | SBS2.pvalue
--------------------- | --- | ------------- |-------------- | ------------- | -----------
-TCGA.BH.A0EI         | 18  | 0.37          | 0             | 0.0085        | 0.15              
-TCGA.E9.A22B         | 50  | 0.31          | 0             | 0.18          | 0              
-TCGA.OL.A5RV         | 10  | 0.34          | 0             | 2.6e-11       | 0.30        
+Sample Name          | Number of Mutations | SBS1.observed | SBS1.pvalue   | SBS2.observed | SBS2.pvalue
+-------------------- | ------------------- | ------------- |-------------- | ------------- | -----------
+TCGA.BH.A0EI         | 18                  | 0.37          | 0             | 0.0085        | 0.15              
+TCGA.E9.A22B         | 50                  | 0.31          | 0             | 0.18          | 0              
+TCGA.OL.A5RV         | 10                  | 0.34          | 0             | 2.6e-11       | 0.30        
 
 Note that p-value of 0 indicates that out of `NPERM` samples, none exceeded **H1**, and therefore must be interpreted as *P* < 1/`NPERM`.
 
