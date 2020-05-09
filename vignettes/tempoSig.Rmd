@@ -189,7 +189,7 @@ colnames(sbs)
 ```
 This reference signature list is that of 
 [COSMIC version 3](https://cancer.sanger.ac.uk/cosmic/signatures/SBS) derived from
-the whole genome data sets. There are other files for alternative references included
+the whole genome data sets. There are other files for alternative references
 also included:
 
 * `cosmic_sigProfiler_exome_SBS_signatures.txt`: COSMIC version 3 from exome data
@@ -241,9 +241,9 @@ Maximum likelihood inference is performed by
 s <- extractSig(s, progress.bar = FALSE)
 ```
 ```{r, echo=TRUE, eval=FALSE}
-s <- extractSig(s)
+s <- extractSig(s, progress.bar = TRUE)
 ```
-By default, `progress.bar = TRUE`, which displays progress bar that is useful for 
+The option `progress.bar = TRUE` displays a progress bar, useful for 
 large samples. The inference fills the `expos` slot of the object:
 ```{r}
 expos(s)[1:5,1:2]
@@ -258,7 +258,7 @@ pvalue(s)
 The flag `compute.pval = TRUE` turns it on:
 ```{r, eval = FALSE, echo= TRUE}
 set.seed(135)
-s <- extractSig(s, compute.pval = TRUE, nperm = 1000)
+s <- extractSig(s, compute.pval = TRUE, nperm = 1000, progress.bar = TRUE)
 ```
 ```{r, eval = TRUE, echo = FALSE, cache=TRUE}
 set.seed(135)
@@ -281,7 +281,7 @@ sid <- 'TCGA.BH.A0EI.01A.11D.A10Y.09'
 plotExposure(s, sample.id = sid, cutoff = 1e-3, cex.axis=0.7, cex.names = 0.8)
 ```
 
-The argument `sample.id` can also be integer index. The `cutoff` argument filters
+The argument `sample.id` can also be an integer index. The `cutoff` argument filters
 proportions with the minimum value supplied.
 The $p$-values
 ```{r}
