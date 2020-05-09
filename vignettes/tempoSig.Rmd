@@ -70,7 +70,7 @@ $$
 L = \frac{1}{M}\sum_{i=1}^c m_i \ln p_i = \sum_{i<c}{\hat m}_i \ln p_i + 
 {\hat m}_c \ln \left(1-\sum_{i<c} p_i\right)
 $$
-where $M=\sum_i m_i$, $L$ is the log likelihood per type, ${\hat m}_i=m_i/M$ 
+where $M=\sum_i m_i$, $L$ is the log likelihood per mutation, ${\hat m}_i=m_i/M$ 
 is the proportion of type $i$ in data, and in the second expression, the 
 constraint $\sum_i p_i=1$ was used to eliminate $p_c$, making independent variable
 subset $\{p_i,\: (i=1,\cdots,c-1)\}$, explicit.
@@ -82,8 +82,8 @@ p_i = \sum_{k=1}^K W_{ik} h_k = \frac{\sum_k W_{ik} x_k^2}{\sum_k x_k^2},
 $$
 where the summation is over all $K$ signatures represented by rows of matrix $\sf{W}$
 and $h_k$ is the $k$-th component of the column of $\sf{H}$, giving the proportion
-of $k$-th signature. We assume $\sf{W}$ is normalized row-wise, such that
-$\sum_k W_{ik}=1$. In the second expression, we parametrized $h_k$ via
+of $k$-th signature. We assume $\sf{W}$ is normalized column-wise, such that
+$\sum_i W_{ik}=1$. In the second expression, we parametrized $h_k$ via
 $h_k = x_k^2/\sum_{l} x_{l}^2$ such that the non-negativity constraint
 for exposure $h_k\ge 0$ is automatically satisfied for any $x_k$. 
 
@@ -278,7 +278,7 @@ The function `plotExposure` shows a bar plot of exposure proportions of a
 specified sample:
 ```{r expos_plot, fig.width=6, fig.height=3, fig.fullwidth = TRUE}
 sid <- 'TCGA.BH.A0EI.01A.11D.A10Y.09'
-plotExposure(s, sample.id = sid, cutoff = 1e-3, cex.axis=0.7, cex.names = 0.8)
+plotExposure(s, sample.id = sid, cutoff = 1e-3, cex.axis = 0.7, cex.names = 0.8)
 ```
 
 The argument `sample.id` can also be an integer index. The `cutoff` argument filters
