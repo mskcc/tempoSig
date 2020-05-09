@@ -90,7 +90,7 @@ for exposure $h_k\ge 0$ is automatically satisfied for any $x_k$.
 The two equations above define the log likelihood as a function of unconstrained
 parameters:
 $$
-L = L(x_1,\cdots,x_{k}),
+L = L(x_1,\cdots,x_{K}),
 $$
 whose maximization problem can be solved by any multi-dimensional optimization 
 algorithm. In `tempoSig`, the analytic form of $L$ is exploited by providing its

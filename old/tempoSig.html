@@ -1545,7 +1545,7 @@ L = \frac{1}{M}\sum_{i=1}^c m_i \ln p_i = \sum_{i&lt;c}{\hat m}_i \ln p_i +
 p_i = \sum_{k=1}^K W_{ik} h_k = \frac{\sum_k W_{ik} x_k^2}{\sum_k x_k^2},
 \]</span> where the summation is over all <span class="math inline">\(K\)</span> signatures represented by rows of matrix <span class="math inline">\(\sf{W}\)</span> and <span class="math inline">\(h_k\)</span> is the <span class="math inline">\(k\)</span>-th component of the column of <span class="math inline">\(\sf{H}\)</span>, giving the proportion of <span class="math inline">\(k\)</span>-th signature. We assume <span class="math inline">\(\sf{W}\)</span> is normalized row-wise, such that <span class="math inline">\(\sum_k W_{ik}=1\)</span>. In the second expression, we parametrized <span class="math inline">\(h_k\)</span> via <span class="math inline">\(h_k = x_k^2/\sum_{l} x_{l}^2\)</span> such that the non-negativity constraint for exposure <span class="math inline">\(h_k\ge 0\)</span> is automatically satisfied for any <span class="math inline">\(x_k\)</span>.</p>
 <p>The two equations above define the log likelihood as a function of unconstrained parameters: <span class="math display">\[
-L = L(x_1,\cdots,x_{k}),
+L = L(x_1,\cdots,x_{K}),
 \]</span> whose maximization problem can be solved by any multi-dimensional optimization algorithm. In <code>tempoSig</code>, the analytic form of <span class="math inline">\(L\)</span> is exploited by providing its first derivatives as input to the quasi-Newton BFGS2 (Broyden-Fletcher-Goldfarb-Shanno) routine <a href="https://www.gnu.org/software/gsl/doc/html/multimin.html">gsl_multimin_fdfminimizer_vector_bfgs2</a> in <a href="https://www.gnu.org/software/gsl">GNU Scientific Library</a> (GSL).</p>
 </div>
 <div id="significance-test" class="section level2" number="1.3">
@@ -1727,9 +1727,9 @@ s &lt;- extractSig(s, compute.pval = TRUE, nperm = 1000)</code></pre>
 <pre class="r"><code>pvalue(s)[1:5, 1:5]
 #&gt;                               SBS1  SBS2  SBS3  SBS4  SBS5
 #&gt; TCGA.BH.A0EI.01A.11D.A10Y.09 0.000 0.154 0.780 0.748 0.492
-#&gt; TCGA.E9.A22B.01A.11D.A159.09 0.000 0.000 0.956 0.902 0.053
+#&gt; TCGA.E9.A22B.01A.11D.A159.09 0.000 0.000 0.957 0.903 0.054
 #&gt; TCGA.OL.A5RV.01A.12D.A28B.09 0.001 0.281 0.928 0.302 0.022
-#&gt; TCGA.C8.A275.01A.21D.A16D.09 0.118 0.014 0.272 0.205 0.605
+#&gt; TCGA.C8.A275.01A.21D.A16D.09 0.118 0.014 0.271 0.205 0.607
 #&gt; TCGA.E2.A1IO.01A.11D.A142.09 0.000 0.034 0.987 0.089 0.315</code></pre>
 <p>Note that with the number of permutations <code>nperm = 1000</code> (default), the lowest non-zero pvalue is <span class="math inline">\(1/1000\)</span>. Therefore, the value of 0 indicates <span class="math inline">\(P &lt; 1/1000\)</span>.</p>
 </div>
