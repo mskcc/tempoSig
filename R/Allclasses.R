@@ -50,7 +50,7 @@ tempoSig <- function(data, signat = NULL){
   else if(is.character(signat)){
     if(!file.exists(signat)) stop(paste0('File ',signat,' does not exist'))
     signat <- as.matrix(read.table(signat))
-  }
+  } else if(!is(signat, 'matrix')) signat <- as.matrix(signat)
   nts <- rownames(signat)
   ntd <- rownames(data)
   if(sum(is.na(ntd)) > 0) stop('Data must have explicit mutation type names')

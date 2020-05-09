@@ -1,2 +1,295 @@
-# tempoSig
-Mutation Signature Extraction using Maximum Likelihood
+---
+title: "tempoSig: Mutational signature inference using maximum likelihood"
+output: rmarkdown::html_vignette
+bibliography: refs.bib
+vignette: >
+  %\VignetteIndexEntry{tempoSig}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Introduction
+
+## Mutational signatures
+The package `tempoSig` implements mutational signature inference functions and 
+utilities primarily based on maximum likelihood algorithms.
+Input data are mutational catalogs in the form of matrices, which catalog counts of
+mutation types found in multiple samples into pre-defined classes. The most 
+often-used example is the catalog of single nucleotide substitutions (SBSs) cataloged 
+into trinucleotide contexts in which they occur. Mutational signatures are the
+patterns of the combination of these genetic features recurrent in tumor samples
+[@nikzainal2012; @alexandrov2013; @alexandrov2020]. Up to [~60 recurrent signatures](https://cancer.sanger.ac.uk/cosmic/signatures)
+have been established from a recent study of whole genome sequences of tumor
+samples [@alexandrov2020]. The discovery of these signatures is based on mathematical
+decompositions of mutational *catalog*, represented by a matrix $\sf{X}$, of a large sample set into two matrices, 
+$$
+\sf{X} \sim \sf{W}\sf{H},
+$$
+where $\sf{W}$ and $\sf{H}$ are *signature* and *exposure* matrices, each containing
+repertoires of signatures associated with mutational processes operative in samples 
+and the actual numbers of mutations contributed by each signature to individual sample genomes, respectively. The symbol $\sim$ indicates that the actual data are to be 
+regarded as realizations of the mean given by the product on the right.
+
+Two classes of analysis tasks encountered in genetic studies are *de novo* discovery
+of signatures and *refitting*: in *de novo* discovery, both *signature* and *exposure*
+matrices are unknown, and large samples of tumor genomes or exomes are used as input
+(catalog matrix $\sf{X}$ as a whole) for discovery of signatures. 
+The primary algorithm used in *de novo* discovery of signatures is 
+non-negative matrix factorization [@alexandrov2013].
+In *refitting*, in contrast, existing signature lists are
+used (signature matrix $\sf{W}$ given as input) along with input catalogs to 
+estimate the exposure matrix $\sf{H}$, whose columns give relative proportions of
+signatures present in each sample [@rosenthal2016].
+
+## Maximum likelihood 
+The refitting functions in 
+`tempoSig` are based on the maximum likelihood inference algorithm adapted from
+[mutation-signatures](https://github.com/mskcc/mutation-signatures).
+In refitting, each column of catalog $\sf{X}$ and exposure $\sf{H}$ matrices,
+corresponding to each sample to be analyzed,
+can be treated independent since $\sf{W}$ is assumed known. For a given sample
+genome, the mutational catalog data consist of the observed counts $m_i$ 
+(a single column of matrix $\sf{X}$), where $i=1,\cdots, c$ is the index 
+denoting the mutation type categories under consideration ($c=96$
+for SBS data classified into trinucleotide contexts). The inference task then
+reduces to the problem of estimating multinomial probabilities $p_i$ of observing
+each category $i$ out of 96 based on actual count data $m_i$. The log likelihood,
+or the probability of observing data given parameters $\{p_i\}$, is 
+$$
+L = \frac{1}{M}\sum_{i=1}^c m_i \ln p_i = \sum_{i<c}{\hat m}_i \ln p_i + 
+{\hat m}_c \ln \left(1-\sum_{i<c} p_i\right)
+$$
+where $M=\sum_i m_i$, $L$ is the log likelihood per type, ${\hat m}_i=m_i/M$ 
+is the proportion of type $i$ in data, and in the second expression, the 
+constraint $\sum_i p_i=1$ was used to eliminate $p_c$, making independent variable
+subset $\{p_i,\: (i=1,\cdots,c-1)\}$, explicit.
+
+The multinomial probabilities are given by linear combinations of signature proportions
+via
+$$
+p_i = \sum_{k=1}^K W_{ik} h_k = \frac{\sum_k W_{ik} x_k^2}{\sum_k x_k^2},
+$$
+where the summation is over all $K$ signatures represented by rows of matrix $\sf{W}$
+and $h_k$ is the $k$-th component of the column of $\sf{H}$, giving the proportion
+of $k$-th signature. We assume $\sf{W}$ is normalized row-wise, such that
+$\sum_k W_{ik}=1$. In the second expression, we parametrized $h_k$ via
+$h_k = x_k^2/\sum_{l} x_{l}^2$ such that the non-negativity constraint
+for exposure $h_k\ge 0$ is automatically satisfied for any $x_k$. 
+
+The two equations above define the log likelihood as a function of unconstrained
+parameters:
+$$
+L = L(x_1,\cdots,x_{c-1}),
+$$
+whose maximization problem can be solved by any multi-dimensional optimization 
+algorithm. In `tempoSig`, the analytic form of $L$ is exploited by providing its
+first derivatives as input to the quasi-Newton 
+BFGS2 (Broyden-Fletcher-Goldfarb-Shanno) routine
+[gsl_multimin_fdfminimizer_vector_bfgs2](https://www.gnu.org/software/gsl/doc/html/multimin.html) in [GNU Scientific Library](https://www.gnu.org/software/gsl) (GSL).
+
+## Significance test
+
+For real mutational data with limited sizes (mutational load $M \sim 100$ or less),
+it is important to gauge the statistical significance of exposure outcomes
+($h_k$ for $k=1,\cdots,K$). In `tempoSig`, $p$-values for each exposure are estimated
+by permutation resampling. The catalog data $m_i$ for $i=1,\cdots,c$ are randomly
+permuted $N_p$ times and inferences are repeated for each replicate to get
+exposure samples under the null hypothesis $\{ h_{k}^{(j)}\}$, where 
+$j=1,\cdots, N_p$ is the index for permutation replicates.
+The $p$-value estimate for the $k$-th signature exposure is
+$$
+P_{k} = \frac{1}{N_p} \sum_j I\left(h_{k}^{(j)} \ge h_{k}\right),
+$$
+where $I(x)$ is the indicater function; i.e., the proportion of replicates for which the observed exposure did not exceed the null values.
+
+# Software usage
+
+## Installation
+The main non-R dependency for `tempoSig` is [GSL](https://www.gnu.org/software/gsl).
+It can be installed in Ubuntu Linux by
+```{bash eval=FALSE}
+$ sudo apt-get install libgsl-dev
+```
+or in CentOS,
+```{bash eval=FALSE}
+$ yum install gsl-devel
+```
+To install `tempoSig` along with its dependencies, 
+```{r eval=FALSE}
+devtools::install_github('mskcc/tempoSig')
+```
+
+## Data structure
+Load the package via
+```{r setup}
+library(tempoSig)
+```
+The main data structure used by `tempoSig` is of S4 class `tempoSig` with slots:
+```{r}
+slotNames('tempoSig')
+```
+Except `tmb`, which is a vector, all are matrices. We denote by $n$ the number of
+samples (genomes to be analyzed; total number of columns in matrix $\sf{X}$). The slots
+are
+
+* `catalog`: catalog data matrix of dimension $c\times n$ with 
+  mutation types in rows and samples in columns.
+* `signat`: matrix of reference signatures; dimension $c\times K$ with
+  mutation types in rows and signatures in columns.
+* `tmb`: vector of length $n$; total mutation burden (sum of all mutations) in each
+  sample.
+* `expos`: matrix of inferred exposure values; dimension $n \times K$ with
+  samples in rows and signatures in columns.
+* `pvalue`: matrix of estimated $p$-values: dimension $n \times K$ with
+  samples in rows and signatures in columns.
+  
+The primary input data takes the form of catalog matrix $\sf{X}$. An example is
+provided by the file
+```{r}
+catalog <- system.file('extdata', 'tcga-brca_catalog.txt', package = 'tempoSig')
+x <- read.table(catalog)
+dim(x)
+x[1:5, 1:2]
+rownames(x)
+```
+
+This file was generated by taking mutation count data of 10 tumor samples from the
+mutation annotation format ([MAF](https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/)) file of 
+[TCGA BRCA](https://portal.gdc.cancer.gov/projects/TCGA-BRCA) project.
+The rownames show 96 trinucleotide mutation types with the `ref > alt` inside
+brackets (`ref` either `C` or `T`; otherwise its complementary base taken) and its
+two adjacent nucleotides.
+
+An object of class `tempoSig` is created with the catalog data frame as the main 
+argument:
+```{r}
+s <- tempoSig(data = x)
+s
+```
+The object initiation also can include specification of reference signatures via
+the optional second argument in `tempoSig(data, signat = NULL)`, which by default
+is read from the file
+```{r}
+sbs <- read.table(system.file('extdata', 'cosmic_sigProfiler_SBS_signatures.txt',
+                              package = 'tempoSig'))
+dim(sbs)
+sbs[1:5, 1:5]
+colnames(sbs)
+```
+This reference signature list is that of 
+[COSMIC version 3](https://cancer.sanger.ac.uk/cosmic/signatures/SBS) derived from
+the whole genome data sets. There are other files for alternative references included
+also included:
+
+* `cosmic_sigProfiler_exome_SBS_signatures.txt`: COSMIC version 3 from exome data
+* `cosmic_snv_signatures_v2.txt`: COSMIC version 2 (30 signatures)
+
+They can be used as follows:
+```{r}
+sig2 <- read.table(system.file('extdata', 'cosmic_snv_signatures_v2.txt',
+                               package = 'tempoSig'))
+dim(sig2)
+sig2[1:5, 1:5]
+s2 <- tempoSig(data = x, signat = sig2)
+s2
+```
+The `signat` argument can also take the file name directly.
+
+The slots of a `tempoSig` object can be accessed via accessor functions:
+```{r}
+tmb(s)
+catalog(s)[1:2,1:2]
+expos(s)
+pvalue(s)
+```
+Note that slots `expos` and `pvalue` are empty since inference has not been performed yet.
+
+## Catalog matrix generation
+
+A common outcome of sequencing experiments takes the form of [MAF](https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/) 
+files, which
+collect variant data of multiple samples with annotations. The package
+[maftools](https://bioconductor.org/packages/maftools/) can be used to
+derive catalog matrices from MAF files:
+```{r, eval=FALSE}
+if(!require('BiocManager')) install.packages('BiocManager')
+if(!require('maftools')) BiocManager::install('maftools')
+if(!require('BSgenome.Hsapiens.UCSC.hg19'))
+  BiocManager::install('BSgenome.Hsapiens.UCSC.hg19')
+laml.maf <- system.file('extdata', 'tcga_laml.maf.gz', package = 'maftools')
+laml <- read.maf(maf = laml.maf)
+laml.tnm <- maftools::trinucleotideMatrix(maf = laml, prefix = 'chr', add = TRUE,
+                                          ref_genome = 'BSgenome.Hsapiens.UCSC.hg19')
+catalog <- t(laml.tnm$nmf_matrix)
+```
+
+## Inference
+
+Maximum likelihood inference is performed by 
+```{r, echo=FALSE, eval=TRUE}
+s <- extractSig(s, progress.bar = FALSE)
+```
+```{r, echo=TRUE, eval=FALSE}
+s <- extractSig(s)
+```
+By default, `progress.bar = TRUE`, which displays progress bar that is useful for 
+large samples. The inference fills the `expos` slot of the object:
+```{r}
+expos(s)[1:5,1:2]
+rowSums(expos(s))
+```
+Note that each row gives proportions of reference signatures, which add up to 1.
+
+By default, $p$-value estimation is skipped:
+```{r}
+pvalue(s)
+```
+The flag `compute.pval = TRUE` turns it on:
+```{r, eval = FALSE, echo= TRUE}
+set.seed(135)
+s <- extractSig(s, compute.pval = TRUE, nperm = 1000)
+```
+```{r, eval = TRUE, echo = FALSE, cache=TRUE}
+set.seed(135)
+s <- extractSig(s, compute.pval = TRUE, nperm = 1000, progress.bar = FALSE)
+```
+```{r}
+pvalue(s)[1:5, 1:5]
+```
+Note that with the number of permutations `nperm = 1000` (default), the 
+lowest non-zero pvalue is $1/1000$. Therefore, the value of 0 indicates
+$P < 1/1000$.
+
+## Visualization and output
+
+A number of utility functions for plotting and output are included.
+The function `plotExposure` shows a bar plot of exposure proportions of a 
+specified sample:
+```{r, fig.width=6, fig.height=3, fig.fullwidth = TRUE}
+sid <- 'TCGA.BH.A0EI.01A.11D.A10Y.09'
+plotExposure(s, sample.id = sid, cutoff = 1e-3, cex.axis=0.7, cex.names = 0.8)
+```
+
+The argument `sample.id` can also be integer index. The `cutoff` argument filters
+proportions with the minimum value supplied.
+The $p$-values
+```{r}
+p <- pvalue(s)[sid,]
+p[c('SBS1', 'SBS2', 'SBS7b', 'SBS7d', 'SBS10b', 'SBS19', 'SBS51', 'SBS52')]
+```
+indicate `SBS2`, `SBS10b`, and `SBS52` are insignificant.
+
+In addition,
+```{r, eval=FALSE}
+writeExposure(s, output = 'exposure.tsv', sep = '\t', rm.na = TRUE)
+```
+will write the exposure, along with $p$-values if any, to a file.
+
+# References

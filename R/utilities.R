@@ -42,6 +42,7 @@ plotExposure <- function(object, sample.id, cutoff = 1e-3, ...){
   expo <- expos(object)
   if(sample.id < 1 | sample.id > NROW(expo)) stop('sample.id out of bound in object')
   e <- expo[sample.id,]
+  e <- e[e >= cutoff]
   names.arg <- names(e)
   names.arg[e < cutoff] <- ''
   graphics::barplot(e, main = sname[sample.id], las=2, names.arg = names.arg,
