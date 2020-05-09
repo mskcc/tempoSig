@@ -272,7 +272,7 @@ $P < 1/1000$.
 A number of utility functions for plotting and output are included.
 The function `plotExposure` shows a bar plot of exposure proportions of a 
 specified sample:
-```{r, fig.width=6, fig.height=3, fig.fullwidth = TRUE}
+```{r expos_plot, fig.width=6, fig.height=3, fig.fullwidth = TRUE}
 sid <- 'TCGA.BH.A0EI.01A.11D.A10Y.09'
 plotExposure(s, sample.id = sid, cutoff = 1e-3, cex.axis=0.7, cex.names = 0.8)
 ```
