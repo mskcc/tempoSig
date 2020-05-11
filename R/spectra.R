@@ -15,12 +15,15 @@
 #' @return List of components \code{X}: simulated mutation counts;
 #'         \code{W}, \code{H}: signature and exposure matrices.
 #' @examples
-#' library(gtools)
 #' set.seed(135)
 #' K <- 5 # no. of processes
-#' W <- t(rdirichlet(n = K, alpha = rep(1, 96)))
-#' h <- rdirichlet(n = K, alpha = rep(5, K))[1,]
+#' W <- t(gtools::rdirichlet(n = K, alpha = rep(1, 96)))
+#' rownames(W) <- trinucleotides()
+#' h <- gtools::rdirichlet(n = 1, alpha = rep(5, K))
 #' x <- simulateSpectra(W = W, h = h, N = 100)
+#' 
+#' W <- read.table(system.file('extdata', 'cosmic_snv_signatures_v2.txt', 
+#'                 package = 'tempoSig'), header = TRUE, sep='\t')
 #' @export
 simulateSpectra <- function(W, pzero = 0.5, nmut = 100, h, N = 10,
                             dilute.ultra = FALSE, min.mut = 1){
