@@ -62,7 +62,7 @@ mutationalCone <- function(catalog, signatures='cosmic_v3', normalize=FALSE){
 #' @return Matrix of dimension \code{(a,b)}, whose elements give overlap of column \code{a}
 #'         in matrix \code{A} with column \code{b} in matrix \code{B}.
 #' @export
-CosineSimilarity <- function(A, B){
+cosineSimilarity <- function(A, B){
   
   a <- NCOL(A)
   b <- NCOL(B)
