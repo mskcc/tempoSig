@@ -5,8 +5,8 @@
 \title{Simulate mutational spectra}
 \usage{
 simulateSpectra(
-  W,
-  pzero = 0.5,
+  W = NULL,
+  pzero = 0.3,
   nmut = 100,
   h,
   N = 10,
@@ -41,10 +41,15 @@ Generate simulated data using zero-inflated Poisson model
 See Omichessan et al. DOI: 10.1371/journal.pone.0221235
 }
 \examples{
-library(gtools)
 set.seed(135)
 K <- 5 # no. of processes
-W <- t(rdirichlet(n = K, alpha = rep(1, 96)))
-h <- rdirichlet(n = K, alpha = rep(5, K))[1,]
+W <- t(gtools::rdirichlet(n = K, alpha = rep(1, 96)))
+rownames(W) <- trinucleotides()
+h <- gtools::rdirichlet(n = 1, alpha = rep(5, K))
 x <- simulateSpectra(W = W, h = h, N = 100)
+
+h <- read.table(system.file('extdata', 'hmean_breast_lung_skin_pancr.txt',
+                            package = 'tempoSig'), header = TRUE, sep = '\t')
+h <- t(h)['Breast',]
+x <- simulateSpectra(h = h, N = 100)
 }
