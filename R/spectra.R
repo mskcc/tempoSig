@@ -22,16 +22,28 @@
 #' h <- gtools::rdirichlet(n = 1, alpha = rep(5, K))
 #' x <- simulateSpectra(W = W, h = h, N = 100)
 #' 
-#' W <- read.table(system.file('extdata', 'cosmic_snv_signatures_v2.txt', 
-#'                 package = 'tempoSig'), header = TRUE, sep='\t')
+#' h <- read.table(system.file('extdata', 'hmean_breast_lung_skin_pancr.txt',
+#'                             package = 'tempoSig'), header = TRUE, sep = '\t')
+#' h <- t(h)['Breast',]
+#' x <- simulateSpectra(h = h, N = 100)
 #' @export
-simulateSpectra <- function(W, pzero = 0.5, nmut = 100, h, N = 10,
+simulateSpectra <- function(W = NULL, pzero = 0.3, nmut = 100, h, N = 10,
                             dilute.ultra = FALSE, min.mut = 1){
 
+  if(is.null(W)) 
+    W <- read.table(system.file('extdata', 'cosmic_sigProfiler_SBS_signatures.txt',
+                                package = 'tempoSig'), header = TRUE, sep = '\t')
   if(!is(W, 'matrix')) W <- as.matrix(W)
   m <- NROW(W)
-  K <- NCOL(W)
-  if(length(h) != K) stop('h is inconsistent with W')
+  h <- h[h > 0]
+  if(is.null(names(h))) stop('h must have element names')
+  W <- W[, colnames(W) %in% names(h)]
+  idx <- match(colnames(W), names(h))
+  if(sum(is.na(idx)) > 0 | sum(duplicated(idx)) > 0) 
+    stop('names of h do not match reference signature names')
+  h <- h[idx]
+  K <- length(h)
+  
   if(pzero < 0 | pzero > 1) stop('Invalid pzero value')
   lsk <- h*nmut/(1 - pzero)  # process-dependent Poisson mean
   H <- matrix(0, nrow = K, ncol = N)
