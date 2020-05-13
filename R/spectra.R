@@ -12,6 +12,11 @@
 #' @param N No. of samples
 #' @param dilute.ultra Dipute ultra-mutated samples to reduce bias
 #' @param min.mut Minimum mutation load
+#' @param distr Underlying distribution of exposure counts; 
+#'        \code{c('nbinom', 'pois')}, either negative binomial or Poisson.
+#'        If \code{nbinom}, \code{size} parameter is set such that
+#'        standard deviation to mean ratio is constant.
+#' @param alpha Standard deviation to mean ratio of negative binomial.
 #' @return List of components \code{X}: simulated mutation counts;
 #'         \code{W}, \code{H}: signature and exposure matrices.
 #' @examples
@@ -28,7 +33,8 @@
 #' x <- simulateSpectra(h = h, N = 100)
 #' @export
 simulateSpectra <- function(W = NULL, pzero = 0.3, nmut = 100, h, N = 10,
-                            dilute.ultra = FALSE, min.mut = 1){
+                            dilute.ultra = FALSE, min.mut = 1,
+                            distr = 'nbinom', alpha = 0.2){
 
   if(is.null(W)) 
     W <- read.table(system.file('extdata', 'cosmic_sigProfiler_SBS_signatures.txt',
@@ -50,8 +56,12 @@ simulateSpectra <- function(W = NULL, pzero = 0.3, nmut = 100, h, N = 10,
   for(k in seq(1, K)){
     p = rbinom(n = N, size = 1, prob = 1 - pzero)
     np <- sum(p==1)
-    if(np > 0)
-      H[k, p==1] <- rpois(n = np, lambda = lsk[k])
+    if(np ==0) next()
+    if(distr=='pois')
+      H[k, p==1] <- rpois(n = np, lambda = lsk[k])  # poisson
+    else if(distr=='nbinom')
+      H[k, p==1] <- rpnb(n = np, mu = lsk[k], alpha = alpha)
+    else stop('Unknown distribution')
   }
   if(min.mut > 0){
     H <- H[, colSums(H) >= min.mut]
@@ -69,6 +79,18 @@ simulateSpectra <- function(W = NULL, pzero = 0.3, nmut = 100, h, N = 10,
   return(x)
 }
 
+# "Fat" negative binomial
+# n = no. of observations
+# mu = mean
+# alpha = SD / mean ratio
+rpnb <- function(n, mu, alpha){
+  
+  if(alpha < 1/sqrt(mu))
+    rpois(n = n, lambda = mu)
+  else
+    rnbinom(n = n, size = 1/(alpha^2 - 1/mu), mu = mu)
+  
+}
 # Dilute ultra-mutated samples (Kim et al. DOI: 10.1038/hg.3557)
 
 diluteUltraMutated <- function(X, maxiter=100){
