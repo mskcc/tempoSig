@@ -294,6 +294,10 @@ In addition,
 ```{r, eval=FALSE}
 writeExposure(s, output = 'exposure.tsv', sep = '\t', rm.na = TRUE)
 ```
-will write the exposure, along with $p$-values if any, to a file.
+will write the exposure, along with $p$-values if any, to a single file. Optionally, one can choose
+to write two files, one for exposure and the other for $p$-values via
+```{r, eval=FALSE}
+writeExpsosure(s, output = 'exposure.tsv', pv.out = 'pvalues.tsv')
+```
 
 # References
