@@ -69,7 +69,8 @@ extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb
           rownames(rsp) <- nt
           perm[, k] <- mutationalCone(catalog = rsp, signature = ref, normalize = TRUE)
         }
-        if(progress.bar) setTxtProgressBar(pb, ((i - 1)*nperm + k)/nsample/nperm)
+        if(progress.bar) if(k %% 100 == 0)
+          setTxtProgressBar(pb, ((i - 1)*nperm + k)/nsample/nperm)
       }
       pv[i, ] <- rowSums(perm >= hi) / nperm
     } else if(progress.bar) setTxtProgressBar(pb, i/nsample)

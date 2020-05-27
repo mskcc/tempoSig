@@ -13,7 +13,7 @@
 #' @param dilute.ultra Dipute ultra-mutated samples to reduce bias
 #' @param min.mut Minimum mutation load
 #' @param distr Underlying distribution of exposure counts; 
-#'        \code{c('nbinom', 'pois')}, either negative binomial or Poisson.
+#'        \code{c('pois', 'nbinom')}, either Poisson or negative binomial.
 #'        If \code{nbinom}, \code{size} parameter is set such that
 #'        standard deviation to mean ratio is constant.
 #' @param alpha Standard deviation to mean ratio of negative binomial.
@@ -34,7 +34,7 @@
 #' @export
 simulateSpectra <- function(W = NULL, pzero = 0.3, nmut = 100, h, N = 10,
                             dilute.ultra = FALSE, min.mut = 1,
-                            distr = 'nbinom', alpha = 0.2){
+                            distr = 'pois', alpha = 0.2){
 
   if(is.null(W)) 
     W <- read.table(system.file('extdata', 'cosmic_sigProfiler_SBS_signatures.txt',

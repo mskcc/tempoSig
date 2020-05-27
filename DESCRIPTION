@@ -1,7 +1,7 @@
 Package: tempoSig
 Type: Package
 Title: Maximum Likelihood Fitting of Mutational Catalog to Signatures
-Version: 0.2.1
+Version: 0.2.2
 Author: Jun Woo
 Maintainer: Jun Woo <wooh@mskcc.org>
 Depends: R (>= 3.6.0)

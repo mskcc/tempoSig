@@ -61,9 +61,11 @@ plotExposure <- function(object, sample.id, cutoff = 1e-3, ...){
 #' @param output File name of the output
 #' @param sep Delimiter, either space or tab.
 #' @param rm.na Remove rows with NAs (mutation load below minimum)
+#' @param pv.out File name for p-value output. If \code{NULL}, \code{output}
+#'        file is written with alternating observed and p-value columns.
 #'
 #' @export
-writeExposure <- function(object, output, sep = '\t', rm.na = TRUE){
+writeExposure <- function(object, output, sep = '\t', rm.na = TRUE, pv.out = NULL){
 
   if(!is(object, 'tempoSig')) stop('Object is not of class tempoSig')
   if(!is.character(output)) stop('Output file name must be characters')
@@ -78,22 +80,36 @@ writeExposure <- function(object, output, sep = '\t', rm.na = TRUE){
   } else tmba <- tmb(object)
 
   is.pv <- !all(dim(pvalue(object)) == 0)   # pvalue is not empty
-  if(!is.pv)
-    out <- cbind(data.frame(Tumor_Sample_Barcode = rownames(expo), TMB = tmba),
-                 as.data.frame(expo))
-  else{
-    out <- data.frame(Tumor_Sample_Barcode = rownames(expo), TMB = tmba)
+  out0 <- data.frame(Tumor_Sample_Barcode = rownames(expo), TMB = tmba)
+  
+  if(!is.pv | !is.null(pv.out))  # no pvalue or separate output
+    out <- cbind(out0, as.data.frame(expo))
+  else out <- out0
+  
+  if(is.pv){
+    if(!is.null(pv.out)) pout <- out0
     pv <- pvalue(object)
     pv <- pv[!bad, , drop = FALSE]
     sig.names <- colnames(expo)
     for(k in seq(NCOL(expo))){
-      tmp <- data.frame(expo[,k], pv[,k])
-      names(tmp) <- paste0(sig.names[k], c('.observed','.pvalue'))
-      out <- cbind(out, tmp)
+      if(is.null(pv.out)){
+        tmp <- data.frame(expo[,k], pv[,k])
+        names(tmp) <- paste0(sig.names[k], c('.observed','.pvalue'))
+        out <- cbind(out, tmp)
+      } else{
+        tmp <- data.frame(pv[,k])
+        names(tmp) <- sig.names[k]
+        pout <- cbind(pout, tmp)
+      }
     }
   }
+  
   colnames(out)[1:2] <- c('Sample Name', 'Number of Mutations') # compatibility
-  write.table(out, file=output, sep = sep, row.names = F, quote = F)
+  if(!is.null(pv.out)) colnames(pout)[1:2] <- colnames(out)[1:2]
+  
+  write.table(out, file = output, sep = sep, row.names = F, quote = F)
+  if(!is.null(pv.out)) write.table(pout, file = pv.out, sep = sep, row.names = F,
+                                   quote = F)
   return(invisible(object))
 }
 
@@ -154,4 +170,57 @@ ntdag <- function(nt){
     else stop('Unknown nucleotide in maf file')
   }
   return(z)
+}
+
+#' True and false positive rates
+#' 
+#' From supplied exposure prediction and actual vectors, compute 
+#' true and false positive rates
+#' @param xhat Predicted exposure vector
+#' @param x True exposure vector
+#' @param pvalue Vector of prediction p-values
+#' @param alpha False positive rate threshold
+#' @return list of vectors \code{tp} (true positives), \code{fp} (false positives),
+#'         all positives \code{positives} and negatives \code{negatives} in
+#'         names of \code{xhat}
+#' @export
+senspec <- function(xhat, x, pvalue = NULL, alpha = 0.05){
+  
+  if(is.null(names(xhat)) | is.null(names(x)))
+    stop('Input vectors must have names')
+  if(!is.null(pvalue)){ 
+    if(sum(is.null(names(pvalue))) > 0) stop('pvalues must have names')
+    if(length(xhat) != length(pvalue)) stop('xhat and pvalue have different lengths')
+    if(!all(names(xhat)==names(pvalue))) stop('xhat and pvalue names mismatch')
+  }
+
+  if(length(xhat) > length(x))
+    x <- vectorPad(x, xhat, value = 0)
+  else if(length(xhat) < length(x)){
+    xhat <- vectorPad(xhat, x, value = 0)
+    if(!is.null(pvalue)) 
+      pvalue <- vectorPad(pvalue, xhat, value = 1)
+  }
+  
+  bhat <- xhat > 0
+  if(!is.null(pvalue))           # filter with pvalues for significant subset
+    bhat <- bhat & (pvalue <= alpha)
+  b <- x > 0
+# tpr <- sum(bhat & b) / sum(b)  # true positive rate
+# fpr <- sum(bhat & !b) /sum(!b) # false positive rate
+  tp <- names(bhat)[bhat & b]
+  fp <- names(bhat)[bhat & !b]
+  positives <- names(bhat)[b]
+  negatives <- names(bhat)[!b]
+  
+  return(list(tp=tp, fp=fp, positives=positives, negatives=negatives))
+}
+
+# Expand named vector x to match xref names and order
+vectorPad <- function(x, xref, value = 0){
+  
+  x2 <- rep(value, length(xref))
+  names(x2) <- names(xref)
+  x2[names(x)] <- x
+  return(x2[match(names(xref), names(x2))])
 }

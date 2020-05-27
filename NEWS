@@ -1,3 +1,9 @@
+tempoSig 0.2.2
+===============
+Changes (05/15/20):
+
+* Overhauled simulation utilites, simulateSpectra() and senspec()
+
 tempoSig 0.2.1
 ===============
 Changes (04/29/20):

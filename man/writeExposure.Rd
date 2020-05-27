@@ -4,7 +4,7 @@
 \alias{writeExposure}
 \title{Write Exposure}
 \usage{
-writeExposure(object, output, sep = "\\t", rm.na = TRUE)
+writeExposure(object, output, sep = "\\t", rm.na = TRUE, pv.out = NULL)
 }
 \arguments{
 \item{object}{Object of class \code{tempoSig}}
@@ -14,6 +14,9 @@ writeExposure(object, output, sep = "\\t", rm.na = TRUE)
 \item{sep}{Delimiter, either space or tab.}
 
 \item{rm.na}{Remove rows with NAs (mutation load below minimum)}
+
+\item{pv.out}{File name for p-value output. If \code{NULL}, \code{output}
+file is written with alternating observed and p-value columns.}
 }
 \description{
 Save a text output of exposures
