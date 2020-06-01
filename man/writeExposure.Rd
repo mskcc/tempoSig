@@ -4,7 +4,7 @@
 \alias{writeExposure}
 \title{Write Exposure}
 \usage{
-writeExposure(object, output, sep = "\\t", rm.na = TRUE, pv.out = NULL)
+writeExposure(object, output, sep = "\\t", rm.na = FALSE, pv.out = NULL)
 }
 \arguments{
 \item{object}{Object of class \code{tempoSig}}

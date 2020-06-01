@@ -28,6 +28,8 @@ exposure; each row gives proportions of each
 sample with signatures in columns}
 
 \item{\code{pvalue}}{P-values of exposures estimated from permutation tests;
-same dimension as \code{expos}.}
+same dimension as \code{expos}}
+
+\item{\code{logLik}}{Log likelihood}
 }}
 

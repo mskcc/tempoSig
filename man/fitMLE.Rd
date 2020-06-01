@@ -17,7 +17,7 @@ and signatures in columns}
 \item{tol}{Tolerance of convergence}
 }
 \value{
-Vector of estimated signature exposure proportions
+List of exposure vector \code{p} and \code{loglik}
 }
 \description{
 Maximum likelihood inference of signature proportions

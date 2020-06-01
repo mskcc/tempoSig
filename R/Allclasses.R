@@ -13,7 +13,8 @@
 #'                exposure; each row gives proportions of each
 #'                sample with signatures in columns
 #' @slot pvalue P-values of exposures estimated from permutation tests;
-#'            same dimension as \code{expos}.
+#'            same dimension as \code{expos}
+#' @slot logLik Log likelihood
 #' @return Object of class \code{tempoSig}
 #' @export tempoSig
 setClass('tempoSig',
@@ -21,7 +22,8 @@ setClass('tempoSig',
                    signat = 'matrix',
                    tmb = 'vector',
                    expos = 'matrix',
-                   pvalue = 'matrix'
+                   pvalue = 'matrix',
+                   logLik = 'vector'
          ))
 
 #' Create \code{tempoSig} object
@@ -51,6 +53,7 @@ tempoSig <- function(data, signat = NULL){
     if(!file.exists(signat)) stop(paste0('File ',signat,' does not exist'))
     signat <- as.matrix(read.table(signat))
   } else if(!is(signat, 'matrix')) signat <- as.matrix(signat)
+  if(!all(abs(colSums(signat) - 1) < 1e-4)) stop('Signature list not normalized')
   nts <- rownames(signat)
   ntd <- rownames(data)
   if(sum(is.na(ntd)) > 0) stop('Data must have explicit mutation type names')
@@ -58,7 +61,7 @@ tempoSig <- function(data, signat = NULL){
   if(sum(is.na(idx)) > 0 | sum(duplicated(idx)) > 0)
     stop('Row names in data do not match reference signatures')
   data <- data[idx, , drop = FALSE]
-
+  
   x <- new('tempoSig', catalog = data, signat = signat)
   x@tmb <- colSums(data)
 
@@ -110,6 +113,14 @@ setMethod('signat', signature = 'tempoSig',
             object@signat
           }
 )
+#' @export
+setGeneric('signat<-', function(object, value) standardGeneric('signat<-'))
+#' @export
+setMethod('signat<-', signature = 'tempoSig',
+          function(object, value){
+            object@pvalue <- value
+            if(validObject(object)) return(object)
+          })
 #' @export
 setGeneric('tmb', function(object) standardGeneric('tmb'))
 #' Accessor for TMB
@@ -168,5 +179,23 @@ setGeneric('pvalue<-', function(object, value) standardGeneric('pvalue<-'))
 setMethod('pvalue<-', signature = 'tempoSig',
           function(object, value){
             object@pvalue <- value
+            if(validObject(object)) return(object)
+          })
+#' Accessor for logLik
+#'
+#' @param object Object containing \code{logLik}
+#' @return \code{logLik} value
+#' @export
+setMethod('logLik', signature = 'tempoSig',
+          function(object){
+            object@logLik
+          }
+)
+#' @export
+setGeneric('logLik<-', function(object, value) standardGeneric('logLik<-'))
+#' @export
+setMethod('logLik<-', signature = 'tempoSig',
+          function(object, value){
+            object@logLik <- value
             if(validObject(object)) return(object)
           })

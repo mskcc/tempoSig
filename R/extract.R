@@ -45,6 +45,8 @@ extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb
   if(compute.pval) pv <- h
 
   if(progress.bar) pb <- txtProgressBar(style = 3)
+  L <- rep(0, nsample)
+  names(L) <- colnames(spectrum)
   for(i in seq(nsample)){
     if(mut.load[i] < min.tmb){ 
       h[i, ] <- rep(NA, nref)
@@ -52,8 +54,11 @@ extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb
       next()
     }
     spec <- spectrum[, i]
-    if(method=='mle')
-      h[i, ] <- hi <- fitMLE(x = spec, ref = ref, itmax = itmax, tol = tol)
+    if(method=='mle'){
+      fi <- fitMLE(x = spec, ref = ref, itmax = itmax, tol = tol)
+      h[i, ] <- hi <- fi$h
+      L[i] <- fi$loglik
+    }
     else
       h[i, ] <- hi <- mutationalCone(catalog = spectrum[, i, drop=F], 
                                      signature = ref, normalize = TRUE)
@@ -62,8 +67,10 @@ extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb
       for(k in seq(nperm)){   # samples under null hypothesis
         rsp <- spec[sample(nnt)]
         names(rsp) <- nt
-        if(method=='mle')
-          perm[, k] <- fitMLE(x = rsp, ref = ref, itmax = itmax, tol = tol)
+        if(method=='mle'){
+          fm <- fitMLE(x = rsp, ref = ref, itmax = itmax, tol = tol)
+          perm[, k] <- fm$h
+        }
         else{
           rsp <- matrix(rsp, ncol=1)
           rownames(rsp) <- nt
@@ -79,6 +86,8 @@ extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb
 
   expos(object) <- h
   if(compute.pval) pvalue(object) <- pv
+  if(method=='mle')
+    logLik(object) <- L
 
   return(object)
 }
@@ -90,7 +99,7 @@ extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb
 #'            and signatures in columns
 #' @param itmax Maximum number of iterations
 #' @param tol Tolerance of convergence
-#' @return Vector of estimated signature exposure proportions
+#' @return List of exposure vector \code{p} and \code{loglik}
 #' @export
 fitMLE <- function(x, ref, itmax = 1000, tol = 1e-4){
 
@@ -101,6 +110,6 @@ fitMLE <- function(x, ref, itmax = 1000, tol = 1e-4){
   p <- mlestimate(x, x0, ref, Itmax=itmax, Tol=tol)
   h <- p$x^2/sum(p$x^2)
   names(h) <- colnames(ref)
-
-  return(h)
+  
+  return(list(h=h, loglik = p$lkh))
 }

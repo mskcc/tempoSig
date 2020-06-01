@@ -1539,7 +1539,7 @@ L = L(x_1,\cdots,x_{K}),
 <h2><span class="header-section-number">1.3</span> Significance test</h2>
 <p>For real mutational data with limited sizes (mutational load <span class="math inline">\(M \sim 100\)</span> or less), it is important to gauge the statistical significance of exposure outcomes (<span class="math inline">\(h_k\)</span> for <span class="math inline">\(k=1,\cdots,K\)</span>). In <code>tempoSig</code>, <span class="math inline">\(p\)</span>-values for each exposure are estimated by permutation resampling. The catalog data <span class="math inline">\(m_i\)</span> for <span class="math inline">\(i=1,\cdots,c\)</span> are randomly permuted <span class="math inline">\(N_p\)</span> times and inferences are repeated for each replicate to get exposure samples under the null hypothesis <span class="math inline">\(\{ h_{k}^{(j)}\}\)</span>, where <span class="math inline">\(j=1,\cdots, N_p\)</span> is the index for permutation replicates. The <span class="math inline">\(p\)</span>-value estimate for the <span class="math inline">\(k\)</span>-th signature exposure is <span class="math display">\[
 P_{k} = \frac{1}{N_p} \sum_j I\left(h_{k}^{(j)} \ge h_{k}\right),
-\]</span> where <span class="math inline">\(I(x)\)</span> is the indicater function; i.e., the proportion of replicates for which the observed exposure did not exceed the null values.</p>
+\]</span> where <span class="math inline">\(I(x)\)</span> is the indicator function; i.e., the proportion of replicates for which the observed exposure did not exceed the null values.</p>
 </div>
 </div>
 <div id="software-usage" class="section level1">
@@ -1559,14 +1559,15 @@ P_{k} = \frac{1}{N_p} \sum_j I\left(h_{k}^{(j)} \ge h_{k}\right),
 <pre class="r"><code>library(tempoSig)</code></pre>
 <p>The main data structure used by <code>tempoSig</code> is of S4 class <code>tempoSig</code> with slots:</p>
 <pre class="r"><code>slotNames('tempoSig')
-#&gt; [1] &quot;catalog&quot; &quot;signat&quot;  &quot;tmb&quot;     &quot;expos&quot;   &quot;pvalue&quot;</code></pre>
-<p>Except <code>tmb</code>, which is a vector, all are matrices. We denote by <span class="math inline">\(n\)</span> the number of samples (genomes to be analyzed; total number of columns in matrix <span class="math inline">\(\sf{X}\)</span>). The slots are</p>
+#&gt; [1] &quot;catalog&quot; &quot;signat&quot;  &quot;tmb&quot;     &quot;expos&quot;   &quot;pvalue&quot;  &quot;logLik&quot;</code></pre>
+<p>Except <code>tmb</code> and <code>logLik</code>, which are vectors, all are matrices. We denote by <span class="math inline">\(n\)</span> the number of samples (genomes to be analyzed; total number of columns in matrix <span class="math inline">\(\sf{X}\)</span>). The slots are</p>
 <ul>
 <li><code>catalog</code>: catalog data matrix of dimension <span class="math inline">\(c\times n\)</span> with mutation types in rows and samples in columns.</li>
 <li><code>signat</code>: matrix of reference signatures; dimension <span class="math inline">\(c\times K\)</span> with mutation types in rows and signatures in columns.</li>
 <li><code>tmb</code>: vector of length <span class="math inline">\(n\)</span>; total mutation burden (sum of all mutations) in each sample.</li>
 <li><code>expos</code>: matrix of inferred exposure values; dimension <span class="math inline">\(n \times K\)</span> with samples in rows and signatures in columns.</li>
 <li><code>pvalue</code>: matrix of estimated <span class="math inline">\(p\)</span>-values: dimension <span class="math inline">\(n \times K\)</span> with samples in rows and signatures in columns.</li>
+<li><code>logLik</code>: vector of log-likelihood values for each sample.</li>
 </ul>
 <p>The primary input data takes the form of catalog matrix <span class="math inline">\(\sf{X}\)</span>. An example is provided by the file</p>
 <pre class="r"><code>catalog &lt;- system.file('extdata', 'tcga-brca_catalog.txt', package = 'tempoSig')
@@ -1687,11 +1688,11 @@ catalog &lt;- t(laml.tnm$nmf_matrix)</code></pre>
 <p>The option <code>progress.bar = TRUE</code> displays a progress bar, useful for large samples. The inference fills the <code>expos</code> slot of the object:</p>
 <pre class="r"><code>expos(s)[1:5,1:2]
 #&gt;                                    SBS1         SBS2
-#&gt; TCGA.BH.A0EI.01A.11D.A10Y.09 0.37256124 8.517735e-03
-#&gt; TCGA.E9.A22B.01A.11D.A159.09 0.31018845 1.800851e-01
-#&gt; TCGA.OL.A5RV.01A.12D.A28B.09 0.33768796 6.204869e-14
-#&gt; TCGA.C8.A275.01A.21D.A16D.09 0.04738398 1.420762e-01
-#&gt; TCGA.E2.A1IO.01A.11D.A142.09 0.35296756 9.406287e-02
+#&gt; TCGA.BH.A0EI.01A.11D.A10Y.09 0.37256695 8.510483e-03
+#&gt; TCGA.E9.A22B.01A.11D.A159.09 0.31018994 1.800844e-01
+#&gt; TCGA.OL.A5RV.01A.12D.A28B.09 0.33766043 2.107483e-11
+#&gt; TCGA.C8.A275.01A.21D.A16D.09 0.04738636 1.420724e-01
+#&gt; TCGA.E2.A1IO.01A.11D.A142.09 0.35293880 9.406583e-02
 rowSums(expos(s))
 #&gt; TCGA.BH.A0EI.01A.11D.A10Y.09 TCGA.E9.A22B.01A.11D.A159.09 TCGA.OL.A5RV.01A.12D.A28B.09 
 #&gt;                            1                            1                            1 
@@ -1711,9 +1712,9 @@ s &lt;- extractSig(s, compute.pval = TRUE, nperm = 1000, progress.bar = TRUE)</c
 <pre class="r"><code>pvalue(s)[1:5, 1:5]
 #&gt;                               SBS1  SBS2  SBS3  SBS4  SBS5
 #&gt; TCGA.BH.A0EI.01A.11D.A10Y.09 0.000 0.154 0.780 0.748 0.492
-#&gt; TCGA.E9.A22B.01A.11D.A159.09 0.000 0.000 0.956 0.902 0.052
+#&gt; TCGA.E9.A22B.01A.11D.A159.09 0.000 0.000 0.957 0.903 0.053
 #&gt; TCGA.OL.A5RV.01A.12D.A28B.09 0.001 0.281 0.928 0.302 0.022
-#&gt; TCGA.C8.A275.01A.21D.A16D.09 0.118 0.014 0.272 0.204 0.606
+#&gt; TCGA.C8.A275.01A.21D.A16D.09 0.118 0.014 0.271 0.205 0.606
 #&gt; TCGA.E2.A1IO.01A.11D.A142.09 0.000 0.034 0.987 0.089 0.315</code></pre>
 <p>Note that with the number of permutations <code>nperm = 1000</code> (default), the lowest non-zero pvalue is <span class="math inline">\(1/1000\)</span>. Therefore, the value of 0 indicates <span class="math inline">\(P &lt; 1/1000\)</span>.</p>
 </div>
@@ -1731,8 +1732,8 @@ p[c('SBS1', 'SBS2', 'SBS7b', 'SBS7d', 'SBS10b', 'SBS19', 'SBS51', 'SBS52')]
 <p>indicate <code>SBS2</code>, <code>SBS10b</code>, and <code>SBS52</code> are insignificant.</p>
 <p>In addition,</p>
 <pre class="r"><code>writeExposure(s, output = 'exposure.tsv', sep = '\t', rm.na = TRUE)</code></pre>
-<p>will write the exposure, along with <span class="math inline">\(p\)</span>-values if any, to a single file. Optionally, one can choose to write two files, one for exposure and the other for <span class="math inline">\(p\)</span>-values via</p>
-<pre class="r"><code>writeExpsosure(s, output = 'exposure.tsv', pv.out = 'pvalues.tsv')</code></pre>
+<p>will write the exposure, along with <span class="math inline">\(p\)</span>-values if any, to a single file. Alternatively, one can choose to write two files, one for exposure and the other for <span class="math inline">\(p\)</span>-values via</p>
+<pre class="r"><code>writeExposure(s, output = 'exposure.tsv', pv.out = 'pvalues.tsv')</code></pre>
 </div>
 </div>
 <div id="references" class="section level1 unnumbered">

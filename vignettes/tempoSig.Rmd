@@ -111,7 +111,7 @@ The $p$-value estimate for the $k$-th signature exposure is
 $$
 P_{k} = \frac{1}{N_p} \sum_j I\left(h_{k}^{(j)} \ge h_{k}\right),
 $$
-where $I(x)$ is the indicater function; i.e., the proportion of replicates for which the observed exposure did not exceed the null values.
+where $I(x)$ is the indicator function; i.e., the proportion of replicates for which the observed exposure did not exceed the null values.
 
 # Software usage
 
@@ -139,7 +139,7 @@ The main data structure used by `tempoSig` is of S4 class `tempoSig` with slots:
 ```{r}
 slotNames('tempoSig')
 ```
-Except `tmb`, which is a vector, all are matrices. We denote by $n$ the number of
+Except `tmb` and `logLik`, which are vectors, all are matrices. We denote by $n$ the number of
 samples (genomes to be analyzed; total number of columns in matrix $\sf{X}$). The slots
 are
 
@@ -153,6 +153,7 @@ are
   samples in rows and signatures in columns.
 * `pvalue`: matrix of estimated $p$-values: dimension $n \times K$ with
   samples in rows and signatures in columns.
+* `logLik`: vector of log-likelihood values for each sample.
   
 The primary input data takes the form of catalog matrix $\sf{X}$. An example is
 provided by the file
@@ -294,10 +295,10 @@ In addition,
 ```{r, eval=FALSE}
 writeExposure(s, output = 'exposure.tsv', sep = '\t', rm.na = TRUE)
 ```
-will write the exposure, along with $p$-values if any, to a single file. Optionally, one can choose
+will write the exposure, along with $p$-values if any, to a single file. Alternatively, one can choose
 to write two files, one for exposure and the other for $p$-values via
 ```{r, eval=FALSE}
-writeExpsosure(s, output = 'exposure.tsv', pv.out = 'pvalues.tsv')
+writeExposure(s, output = 'exposure.tsv', pv.out = 'pvalues.tsv')
 ```
 
 # References

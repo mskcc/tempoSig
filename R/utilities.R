@@ -65,19 +65,21 @@ plotExposure <- function(object, sample.id, cutoff = 1e-3, ...){
 #'        file is written with alternating observed and p-value columns.
 #'
 #' @export
-writeExposure <- function(object, output, sep = '\t', rm.na = TRUE, pv.out = NULL){
+writeExposure <- function(object, output, sep = '\t', rm.na = FALSE, pv.out = NULL){
 
   if(!is(object, 'tempoSig')) stop('Object is not of class tempoSig')
   if(!is.character(output)) stop('Output file name must be characters')
   if(!sep %in% c(' ','\t')) stop('Delimiter must be either space or tab')
   expo <- expos(object)
   if(all(dim(expo) == 0)) stop('Exposure in object empty')
-  
+ 
+  bad <- apply(expo, 1, function(x){all(is.na(x))})
   if(rm.na){
-    bad <- apply(expo, 1, function(x){all(is.na(x))})
+    if(sum(!bad)==0) stop('All samples are NA and rm.na = TRUE')
     expo <- expo[!bad, , drop = FALSE]
     tmba <- tmb(object)[!bad]
-  } else tmba <- tmb(object)
+  } else
+    tmba <- tmb(object)
 
   is.pv <- !all(dim(pvalue(object)) == 0)   # pvalue is not empty
   out0 <- data.frame(Tumor_Sample_Barcode = rownames(expo), TMB = tmba)
@@ -89,7 +91,7 @@ writeExposure <- function(object, output, sep = '\t', rm.na = TRUE, pv.out = NUL
   if(is.pv){
     if(!is.null(pv.out)) pout <- out0
     pv <- pvalue(object)
-    pv <- pv[!bad, , drop = FALSE]
+    if(rm.na) pv <- pv[!bad, , drop = FALSE]
     sig.names <- colnames(expo)
     for(k in seq(NCOL(expo))){
       if(is.null(pv.out)){
