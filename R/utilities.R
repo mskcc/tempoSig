@@ -145,17 +145,21 @@ maf2cat <- function(maf){
   x <- x[!duplicated(x) & x$Ref_Tri != '',]
   
   mut <- rep('', NROW(x))
-  for(i in seq(NROW(x))){
-     w <- c(t(x[i,c('Reference_Allele', 'Tumor_Seq_Allele2')]), 
+  if(NROW(x) > 0){
+    for(i in seq(NROW(x))){
+       w <- c(t(x[i,c('Reference_Allele', 'Tumor_Seq_Allele2')]), 
             strsplit(as.character(x[i, 'Ref_Tri']), split='')[[1]])
-     if(w[1] %in% c('A','G')) 
-       w[1:2] <- ntdag(w[1:2])  # Ref_Tri is already pyrimidine at the center
-     mut[i] <- paste(c(w[3], '[', w[1], '>', w[2], ']', w[5]), collapse='')
+       if(w[1] %in% c('A','G')) 
+         w[1:2] <- ntdag(w[1:2])  # Ref_Tri is already pyrimidine at the center
+       mut[i] <- paste(c(w[3], '[', w[1], '>', w[2], ']', w[5]), collapse='')
+    }
+    mut <- factor(mut, levels=trinucleotides(), ordered = TRUE)
+    tmut <- table(mut, x$Tumor_Sample_Barcode)
+    tmut <- as.data.frame.matrix(tmut)
+  } else{
+    tmut <- data.frame(na=rep(0, 96))
+    rownames(tmut) <- trinucleotides()
   }
-  
-  mut <- factor(mut, levels=trinucleotides(), ordered = TRUE)
-  tmut <- table(mut, x$Tumor_Sample_Barcode)
-  tmut <- as.data.frame.matrix(tmut)
   
   return(tmut)
 }
