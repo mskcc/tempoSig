@@ -1,3 +1,10 @@
+tempoSig 0.2.3
+===============
+Changes (06/08/20):
+
+* Signature Analyzer (SA) reference signature added:
+  extdata/cosmic_SigAnalyzer_SBS_signatures.txt
+
 tempoSig 0.2.2
 ===============
 Changes (05/15/20):
