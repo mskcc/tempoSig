@@ -8,6 +8,8 @@ parser$add_argument('output', metavar = 'OUTPUT', help = 'output file name')
 group <- parser$add_mutually_exclusive_group()
 group$add_argument('--cosmic_v3', action = 'store_true', 
                    help = 'use COSMIC v3 reference signatures (default)')
+group$add_argument('--cosmic_v3_SA', action = 'store_true',
+                   help = 'use COSMIC v3 SigAnalyzer reference signatures')
 group$add_argument('--cosmic_v3_exome', action = 'store_true',
                    help = 'use COSMIC v3 exome reference signatures')
 group$add_argument('--cosmic_v2', action = 'store_true',
@@ -31,6 +33,8 @@ if(!is.null(args$sigfile)){  # custom signature file provided
   sig <- system.file('extdata', 'cosmic_snv_signatures_v2.txt', package = 'tempoSig')
 } else if(args$cosmic_v3_exome){
   sig <- system.file('extdata', 'cosmic_sigProfiler_exome_SBS_signatures.txt', package = 'tempoSig')
+} else if(args$cosmic_v3_SA){
+  sig <- system.file('extdata', 'cosmic_SigAnalyzer_SBS_signatures.txt', package = 'tempoSig')
 } else{  # cosmic_v3 (default)
   sig <- NULL
 }

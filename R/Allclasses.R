@@ -53,6 +53,7 @@ tempoSig <- function(data, signat = NULL){
     if(!file.exists(signat)) stop(paste0('File ',signat,' does not exist'))
     signat <- as.matrix(read.table(signat))
   } else if(!is(signat, 'matrix')) signat <- as.matrix(signat)
+  signat <- signat / colSums(signat) # renormalize just in case (also to remove truncation errors)
   if(!all(abs(colSums(signat) - 1) < 1e-4)) stop('Signature list not normalized')
   nts <- rownames(signat)
   ntd <- rownames(data)
