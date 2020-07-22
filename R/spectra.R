@@ -32,12 +32,11 @@
 #' h <- t(h)['Breast',]
 #' x <- simulateSpectra(h = h, N = 100)
 #' @export
-simulateSpectra <- function(W = NULL, pzero = 0.3, nmut = 100, h, N = 10,
-                            dilute.ultra = FALSE, min.mut = 1,
+simulateSpectra <- function(W = NULL, pzero = 0, nmut = 100, h, N = 10, dilute.ultra = FALSE, min.mut = 1,
                             distr = 'pois', alpha = 0.2){
 
   if(is.null(W)) 
-    W <- read.table(system.file('extdata', 'cosmic_sigProfiler_SBS_signatures.txt',
+    W <- read.table(system.file('extdata', 'cosmic_SigAnalyzer_SBS_signatures.txt',
                                 package = 'tempoSig'), header = TRUE, sep = '\t')
   if(!is(W, 'matrix')) W <- as.matrix(W)
   m <- NROW(W)
