@@ -4,7 +4,7 @@
 \alias{cosineSimilarity}
 \title{Cosine similarity}
 \usage{
-cosineSimilarity(A, B, diag = TRUE)
+cosineSimilarity(A, B, diag = FALSE)
 }
 \arguments{
 \item{A}{Test matrix of dimension \code{(m,a)}}

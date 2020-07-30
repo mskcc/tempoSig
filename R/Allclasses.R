@@ -23,7 +23,8 @@ setClass('tempoSig',
                    tmb = 'vector',
                    expos = 'matrix',
                    pvalue = 'matrix',
-                   logLik = 'vector'
+                   logLik = 'vector',
+                   misc = 'list'
          ))
 
 #' Create \code{tempoSig} object
@@ -47,8 +48,9 @@ tempoSig <- function(data, signat = NULL){
 
   if(!is(data, 'matrix')) data <- as.matrix(data)
   if(is.null(signat))
-    signat <- as.matrix(read.table(system.file('extdata/cosmic_sigProfiler_SBS_signatures.txt',
-                            package = 'tempoSig')))
+#    signat <- as.matrix(read.table(system.file('extdata/cosmic_sigProfiler_SBS_signatures.txt', package = 'tempoSig')))
+     signat <- as.matrix(read.table(system.file('extdata/cosmic_SigAnalyzer_SBS_signatures.txt', 
+                                                package = 'tempoSig')))
   else if(is.character(signat)){
     if(!file.exists(signat)) stop(paste0('File ',signat,' does not exist'))
     signat <- as.matrix(read.table(signat))
@@ -119,7 +121,7 @@ setGeneric('signat<-', function(object, value) standardGeneric('signat<-'))
 #' @export
 setMethod('signat<-', signature = 'tempoSig',
           function(object, value){
-            object@pvalue <- value
+            object@signat <- value
             if(validObject(object)) return(object)
           })
 #' @export
@@ -198,5 +200,25 @@ setGeneric('logLik<-', function(object, value) standardGeneric('logLik<-'))
 setMethod('logLik<-', signature = 'tempoSig',
           function(object, value){
             object@logLik <- value
+            if(validObject(object)) return(object)
+          })
+#' @export
+setGeneric('misc', function(object) standardGeneric('misc'))
+#' Accessor for misc
+#'
+#' @param object Object containing \code{misc}
+#' @return List \code{misc}
+#' @export
+setMethod('misc', signature = 'tempoSig',
+          function(object){
+            object@misc
+          }
+)
+#' @export
+setGeneric('misc<-', function(object, value) standardGeneric('misc<-'))
+#' @export
+setMethod('misc<-', signature = 'tempoSig',
+          function(object, value){
+            object@misc <- value
             if(validObject(object)) return(object)
           })

@@ -71,7 +71,7 @@ mutationalCone <- function(catalog, signatures='cosmic_v3', normalize=FALSE){
 #'         matrix of dimension \code{(a,b)}, whose elements give overlap of column 
 #'         \code{a} in matrix \code{A} with column \code{b} in matrix \code{B}.
 #' @export
-cosineSimilarity <- function(A, B, diag = TRUE){
+cosineSimilarity <- function(A, B, diag = FALSE){
   
   if(!is.matrix(A)) A <- as.matrix(A)
   if(!is.matrix(B)) B <- as.matrix(B)
@@ -79,8 +79,14 @@ cosineSimilarity <- function(A, B, diag = TRUE){
   b <- NCOL(B)
   if(diag & a != b) stop('diag requires same dimension of A and B')
   
-  if(diag) cos <- rep(0, a)
-  else cos <- matrix(0, nrow=a, ncol=b)
+  if(diag){ 
+    cos <- rep(0, a)
+    names(cos) <- colnames(A)
+  } else{ 
+    cos <- matrix(0, nrow=a, ncol=b)
+    rownames(cos) <- colnames(A)
+    colnames(cos) <- colnames(B)
+  }
     
   for(i in seq(1,a)) for(j in seq(1,b)){
     if(diag & i!=j) next()
@@ -97,7 +103,8 @@ cosineSimilarity <- function(A, B, diag = TRUE){
     names(xtest2) <- names(xref)
     if(sum(!names(xtest) %in% names(xref)) > 0) stop('Names mismatch')
     xtest2[names(xtest)] <- xtest
-    x <- sum(xtest2*xref) / sqrt(sum(xtest2^2) * sum(xref^2))
+    if(sum(xtest2)==0 | sum(xref)==0) x <- 0
+    else x <- sum(xtest2*xref) / sqrt(sum(xtest2^2) * sum(xref^2))
     if(diag) cos[i] <- x
     else cos[i,j] <- x
   }

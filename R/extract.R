@@ -12,6 +12,7 @@
 #' @param compute.pval Estimate p-values
 #' @param nperm Number of permutations
 #' @param progress.bar Display progress bar
+#' @param ... Other parameters for \code{denovo} with \code{method = 'hmmf'}
 #' @import Rcpp
 #' @useDynLib tempoSig
 #' @examples
@@ -21,10 +22,10 @@
 #' b_pv <- extractSig(b, compute.pval = TRUE, progress.bar = TRUE)
 #' @export
 extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb = 2,
-                       compute.pval = FALSE, nperm = 1000, progress.bar = FALSE){
+                       compute.pval = FALSE, nperm = 1000, progress.bar = FALSE, cosmic = TRUE, ...){
 
   if(!is(object, 'tempoSig')) stop('object is not of class tempoSig')
-  if(!method %in% c('mle','mutcone')) stop('Method is either mle or mutcone')
+  if(!method %in% c('hnmf','mle','ard','mutcone')) stop('Unknown method')
 
   spectrum <- catalog(object)
   ref <- signat(object)
@@ -37,6 +38,44 @@ extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb
     stop('Mutation types in spectrum do not match reference.')
   spectrum <- spectrum[idx, , drop = FALSE]  # rearrange rows to match reference
 
+  if(method %in% c('hnmf','ard')){
+    # if(randomize) mat <- apply(mat0,2, function(x){sample(x,size=length(x),replace=FALSE)})    
+    if(compute.pval) cat('Computing exposures ...\n',sep='')
+    nmf <- nmf(catalog = spectrum, denovo = (method=='ard'), signat = ref, ard = (method=='ard'),
+               progress.bar = progress.bar, ...)
+    H <- t(nmf$H)
+    if(method == 'ard'){
+      W <- nmf$W
+      if(cosmic){
+        cosine <- cosineSimilarity(A = W, B = ref, diag = FALSE)
+        lsap <- clue::solve_LSAP(cosine, maximum = TRUE)
+        sbs <- colnames(cosine)[lsap]
+        colnames(W) <- colnames(H) <- sbs
+        misc(object) <- list(cosine = cosine)
+      }
+      signat(object) <- W
+    }
+    expos(object) <- H
+    logLik(object) <- nmf$logLik
+    if(compute.pval & method!='ard'){   # estimate p-values by permutation resampling
+      cat('Estimating p-values ...\n',sep='')
+      if(progress.bar) pb <- txtProgressBar(style = 3)
+      for(k in seq(nperm)){
+        spec <- apply(spectrum, 2, function(x){sample(x, size = length(x), replace = FALSE)})
+        rownames(spec) <- rownames(spectrum)
+        nmf <- nmf(catalog = spec, denovo = FALSE, signat = ref, ard = FALSE, progress.bar = FALSE, nrun = 1, ...)
+        tmp <- t(nmf$H) >= H
+        if(k == 1) perm <- tmp
+        else perm <- perm + tmp
+        setTxtProgressBar(pb, k/nperm)
+      }
+      perm <- perm / nperm
+      pvalue(object) <- perm
+      if(progress.bar) close(pb)
+    }
+    return(object)
+  }
+  
   nsample <- length(tmb(object))
   nref <- NCOL(ref)
   h <- matrix(0, nrow = nsample, ncol = nref)

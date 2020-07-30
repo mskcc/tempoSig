@@ -200,14 +200,13 @@ senspec <- function(xhat, x, pvalue = NULL, alpha = 0.05){
     if(!all(names(xhat)==names(pvalue))) stop('xhat and pvalue names mismatch')
   }
 
-  if(length(xhat) > length(x))
-    x <- vectorPad(x, xhat, value = 0)
-  else if(length(xhat) < length(x)){
-    xhat <- vectorPad(xhat, x, value = 0)
-    if(!is.null(pvalue)) 
-      pvalue <- vectorPad(pvalue, xhat, value = 1)
-  }
-  
+  sig <- union(names(xhat), names(x))
+  vsig <- rep(0, length(sig))
+  names(vsig) <- sig
+  x <- vectorPad(x, vsig, value=0)
+  xhat <- vectorPad(xhat, vsig, value=0)
+  if(!is.null(pvalue)) pvalue <- vectorPad(pvalue, vsig, value=1)
+
   bhat <- xhat > 0
   if(!is.null(pvalue))           # filter with pvalues for significant subset
     bhat <- bhat & (pvalue <= alpha)
