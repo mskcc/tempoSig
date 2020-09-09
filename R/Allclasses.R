@@ -31,8 +31,11 @@ setClass('tempoSig',
 #'
 #' @param data Input data of mutation catalog; samples in columns
 #'             and mutation types in rows.
-#' @param signatures Reference signatures table; default is COSMIC
-#'                  version 3 signatures.
+#' @param signat Reference signatures table; default is COSMIC
+#'                  version 3 signatures. It can be a matrix of the table, the file name
+#'                  containing the table, or character code \code{c('v2', 'SA','SP')},
+#'                  signifying \code{COSMIC v2}, \code{sigAnalyzer}, or
+#'                  \code{SigProfiler} references (the latter two are COSMIC v3).
 #' @return Object of class \code{tempoSig}.
 #' @examples
 #' set.seed(130)
@@ -44,17 +47,27 @@ setClass('tempoSig',
 #'                   package='tempoSig'), header=TRUE, sep='\t')
 #' b <- tempoSig(data)
 #' @export
-tempoSig <- function(data, signat = NULL){
+tempoSig <- function(data, signat = 'v2'){
 
   if(!is(data, 'matrix')) data <- as.matrix(data)
-  if(is.null(signat))
-#    signat <- as.matrix(read.table(system.file('extdata/cosmic_sigProfiler_SBS_signatures.txt', package = 'tempoSig')))
-     signat <- as.matrix(read.table(system.file('extdata/cosmic_SigAnalyzer_SBS_signatures.txt', 
-                                                package = 'tempoSig')))
-  else if(is.character(signat)){
-    if(!file.exists(signat)) stop(paste0('File ',signat,' does not exist'))
-    signat <- as.matrix(read.table(signat))
-  } else if(!is(signat, 'matrix')) signat <- as.matrix(signat)
+  if(is(signat, 'data.frame')) signat <- as.matrix(signat)
+  else if(!is(signat, 'matrix')){
+    if(!is(signat, 'character')) stop('Unusuable input of signat')
+    if(is.null(signat) | signat == 'SA')
+      signat <- as.matrix(read.table(system.file('extdata/cosmic_SigAnalyzer_SBS_signatures.txt', 
+                    package = 'tempoSig')))
+    else if(signat == 'SP')
+      signat <- as.matrix(read.table(system.file('extdata/cosmic_sigProfiler_SBS_signatures.txt', 
+                    package = 'tempoSig')))
+    else if(signat == 'v2')
+      signat <- as.matrix(read.table(system.file('extdata/cosmic_snv_signatures_v2.txt', 
+                                                 package = 'tempoSig')))
+    else{
+      if(!file.exists(signat)) stop(paste0('File ',signat,' does not exist'))
+      signat <- as.matrix(read.table(signat))
+    }
+  }
+  
   signat <- signat / colSums(signat) # renormalize just in case (also to remove truncation errors)
   if(!all(abs(colSums(signat) - 1) < 1e-4)) stop('Signature list not normalized')
   nts <- rownames(signat)

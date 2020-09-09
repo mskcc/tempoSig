@@ -5,7 +5,7 @@
 \alias{tempoSig}
 \title{Create \code{tempoSig} object}
 \usage{
-tempoSig(data, signat = NULL)
+tempoSig(data, signat = "SP")
 }
 \arguments{
 \item{data}{Input data of mutation catalog; samples in columns

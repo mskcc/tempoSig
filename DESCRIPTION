@@ -1,11 +1,12 @@
 Package: tempoSig
 Type: Package
 Title: Maximum Likelihood Fitting of Mutational Catalog to Signatures
-Version: 0.3.0
+Version: 0.4.0
 Author: Jun Woo
 Maintainer: Jun Woo <wooh@mskcc.org>
 Depends: R (>= 3.6.0)
-Imports: gtools, Rcpp (>= 0.12.16), utils, argparse, coneproj, data.table, ggplot2, reshape2
+Imports: gtools, Rcpp (>= 0.12.16), utils, argparse, coneproj,
+        data.table, ggplot2, reshape2
 Description: Infers mutation signature exposures from mutation catalog data and
     known signature list. Also includes associated utility functions for significance 
     tests and confidence intervals.
@@ -13,10 +14,8 @@ License: GPL (>= 2)
 LinkingTo: Rcpp
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 NeedsCompilation: yes
-Packaged: 2020-04-24 00:10:36 UTC; jwoo
-Suggests: 
-    knitr,
-    rmarkdown
+Packaged: 2020-09-05 17:21:21 UTC; wooh
+Suggests: knitr, rmarkdown
 VignetteBuilder: knitr

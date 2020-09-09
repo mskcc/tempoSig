@@ -101,7 +101,8 @@ cosineSimilarity <- function(A, B, diag = FALSE){
     }
     xtest2 <- rep(0, length(xref))
     names(xtest2) <- names(xref)
-    if(sum(!names(xtest) %in% names(xref)) > 0) stop('Names mismatch')
+    if(sum(is.na(names(xtest)) > 0) | 
+       sum(!names(xtest) %in% names(xref)) > 0) stop('Names mismatch')
     xtest2[names(xtest)] <- xtest
     if(sum(xtest2)==0 | sum(xref)==0) x <- 0
     else x <- sum(xtest2*xref) / sqrt(sum(xtest2^2) * sum(xref^2))

@@ -14,7 +14,7 @@ nmf(
   verbose = FALSE,
   progress.bar = FALSE,
   Itmax = 1e+05,
-  Tol = 1e-05,
+  Tol = 1e-04,
   a = 10,
   nprint = 100
 )

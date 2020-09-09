@@ -4,7 +4,7 @@
 \alias{fitMLE}
 \title{Maximum likelihood inference of signature proportions}
 \usage{
-fitMLE(x, ref, itmax = 1000, tol = 1e-04)
+fitMLE(x, ref, itmax = 1000, tol = 1e-04, kfixed = -1)
 }
 \arguments{
 \item{x}{Vector of observed proportions of mutation contexts}
@@ -15,6 +15,8 @@ and signatures in columns}
 \item{itmax}{Maximum number of iterations}
 
 \item{tol}{Tolerance of convergence}
+
+\item{kfixed}{Index of parameter to be constrained as zero}
 }
 \value{
 List of exposure vector \code{p} and \code{loglik}

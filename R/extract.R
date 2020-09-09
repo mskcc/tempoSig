@@ -12,7 +12,11 @@
 #' @param compute.pval Estimate p-values
 #' @param nperm Number of permutations
 #' @param progress.bar Display progress bar
-#' @param ... Other parameters for \code{denovo} with \code{method = 'hmmf'}
+#' @param pvtest Algorithm for p-value computation; 
+#'            \code{c('permutation','lrt','x.permutation')} for permutation resampling of 
+#'            signatures, likelihood ratio test (asymptotic formula), or
+#'            permutation of count data.
+#' @param ... Other parameters for \code{denovo} with \code{method = 'hnmf'}
 #' @import Rcpp
 #' @useDynLib tempoSig
 #' @examples
@@ -22,10 +26,13 @@
 #' b_pv <- extractSig(b, compute.pval = TRUE, progress.bar = TRUE)
 #' @export
 extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb = 2,
-                       compute.pval = FALSE, nperm = 1000, progress.bar = FALSE, cosmic = TRUE, ...){
+                       compute.pval = FALSE, nperm = 1000, progress.bar = FALSE,
+                       pvtest = 'permutation', cosmic = TRUE, ...){
 
   if(!is(object, 'tempoSig')) stop('object is not of class tempoSig')
   if(!method %in% c('hnmf','mle','ard','mutcone')) stop('Unknown method')
+  if(method != 'mle' & pvtest == 'lrt') stop('Likelihood ratio test is possible only with MLE')
+  if(method == 'mutcone' & compute.pval) stop('P-value in mutcone not implemented')
 
   spectrum <- catalog(object)
   ref <- signat(object)
@@ -37,12 +44,20 @@ extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb
   if(sum(is.na(idx)) > 0 | sum(duplicated(idx)) > 0)
     stop('Mutation types in spectrum do not match reference.')
   spectrum <- spectrum[idx, , drop = FALSE]  # rearrange rows to match reference
-
+  
   if(method %in% c('hnmf','ard')){
     # if(randomize) mat <- apply(mat0,2, function(x){sample(x,size=length(x),replace=FALSE)})    
     if(compute.pval) cat('Computing exposures ...\n',sep='')
-    nmf <- nmf(catalog = spectrum, denovo = (method=='ard'), signat = ref, ard = (method=='ard'),
-               progress.bar = progress.bar, ...)
+    if(method=='ard'){ 
+      K <- length(nt)
+      signat <- NULL
+    }
+    else{ 
+      K <- NULL
+      signat <- ref
+    }
+    nmf <- nmf(catalog = spectrum, denovo = (method=='ard'), signat = signat, K = K,
+               ard = (method=='ard'), progress.bar = progress.bar, ...)
     H <- t(nmf$H)
     if(method == 'ard'){
       W <- nmf$W
@@ -63,7 +78,8 @@ extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb
       for(k in seq(nperm)){
         spec <- apply(spectrum, 2, function(x){sample(x, size = length(x), replace = FALSE)})
         rownames(spec) <- rownames(spectrum)
-        nmf <- nmf(catalog = spec, denovo = FALSE, signat = ref, ard = FALSE, progress.bar = FALSE, nrun = 1, ...)
+        nmf <- nmf(catalog = spec, denovo = FALSE, signat = ref, ard = FALSE, 
+                   progress.bar = FALSE, nrun = 1, ...)
         tmp <- t(nmf$H) >= H
         if(k == 1) perm <- tmp
         else perm <- perm + tmp
@@ -79,10 +95,11 @@ extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb
   nsample <- length(tmb(object))
   nref <- NCOL(ref)
   h <- matrix(0, nrow = nsample, ncol = nref)
-  colnames(h) <- colnames(ref)
+  signatures <- colnames(ref)
+  colnames(h) <- signatures
   rownames(h) <- colnames(spectrum)
   if(compute.pval) pv <- h
-
+  
   if(progress.bar) pb <- txtProgressBar(style = 3)
   L <- rep(0, nsample)
   names(L) <- colnames(spectrum)
@@ -102,24 +119,40 @@ extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb
       h[i, ] <- hi <- mutationalCone(catalog = spectrum[, i, drop=F], 
                                      signature = ref, normalize = TRUE)
     if(compute.pval){
-      perm <- matrix(1, nrow=nref, ncol=nperm)
-      for(k in seq(nperm)){   # samples under null hypothesis
-        rsp <- spec[sample(nnt)]
-        names(rsp) <- nt
-        if(method=='mle'){
-          fm <- fitMLE(x = rsp, ref = ref, itmax = itmax, tol = tol)
-          perm[, k] <- fm$h
+      if(pvtest == 'lrt'){
+        for(k in seq(nref)){
+          fm <- fitMLE(x = spec, ref = ref[,-k], itmax = itmax, tol = tol)
+          q = 2*mut.load[i]*(L[i] - fm$loglik)
+          pv[i, k] <- pchisq(q, df = 1, lower.tail = FALSE)
         }
-        else{
-          rsp <- matrix(rsp, ncol=1)
-          rownames(rsp) <- nt
-          perm[, k] <- mutationalCone(catalog = rsp, signature = ref, normalize = TRUE)
+      } else{
+        perm <- matrix(0, nrow=nref, ncol=nperm)
+        rownames(perm) <- signatures
+        for(l in seq(nperm)){   # samples under null hypothesis
+          rref <- ref
+          if(pvtest == 'x.permutation'){
+            rsp <- spec
+            rsp <- rsp[sample(length(rsp))]
+            names(rsp) <- nt
+            fh <- fitMLE(x = rsp, ref = ref, itmax = itmax, tol = tol)
+            perm[, l] <- fh$h
+            if(progress.bar) if(l %% 100 == 0)
+              setTxtProgressBar(pb, ((i - 1)*nperm + l)/nsample/nperm)
+          } else if(pvtest == 'permutation'){
+            for(k in seq(nref)){
+              rref[, k] <- rref[sample(nnt),k]
+              names(rref[,k]) <- nt
+              fk <- fitMLE(x = spec, ref = rref, itmax = itmax, tol = tol)
+              perm[k, l] <- fk$h[k]
+              if(progress.bar) if(l %% 10 == 0)
+                setTxtProgressBar(pb, ((i - 1)*nperm*nref + (l - 1)*nref + k)/nsample/nperm/nref)
+            }
+          } else stop('Unknown pvtest')
         }
-        if(progress.bar) if(k %% 100 == 0)
-          setTxtProgressBar(pb, ((i - 1)*nperm + k)/nsample/nperm)
+        pv[i, ] <- rowSums(perm >= h[i, ]) / nperm
       }
-      pv[i, ] <- rowSums(perm >= hi) / nperm
-    } else if(progress.bar) setTxtProgressBar(pb, i/nsample)
+    }
+    if(progress.bar) setTxtProgressBar(pb, i/nsample)
   }
   if(progress.bar) close(pb)
 

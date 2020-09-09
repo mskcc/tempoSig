@@ -20,6 +20,43 @@ trinucleotides <- function(nt = 'ACGT', brackets = TRUE, arrows = TRUE){
   return(w)
 }
 
+#' Dinucleotide labels
+#' 
+#' @export
+dinucleotides <- function(nt = 'ACGT'){
+  
+  nt2 <- strsplit(nt, split='')[[1]]
+  src <- c('AC','AT','CC','CG','CT','GC','TA','TC','TG','TT') # source dinucleotide
+  dbs <- NULL
+  for(i in seq_along(src)){
+    si <- src[i]
+    sn <- strsplit(si,split='')[[1]]
+    for(x in nt2[nt2!=sn[1]]) for(y in nt2[nt2!=sn[2]]){
+      tgt <- c(x,y)
+      sn2 <- rcmp(sn)
+      tg2 <- rcmp(tgt)
+      db <- paste(c(si,'>',tgt),collapse='')
+      db2 <- paste(c(sn2,'>',tg2),collapse='')
+      if(!db %in% dbs & !db2 %in% dbs){
+        if(i %in% c(4,7)) dbs <- c(dbs, db2)
+        else dbs <- c(dbs, db)
+      }
+    }
+  }
+  return(dbs)
+}
+
+rcmp <- function(x){
+  
+  w <- x
+  w[x=='A'] <- 'T'
+  w[x=='C'] <- 'G'
+  w[x=='G'] <- 'C'
+  w[x=='T'] <- 'A'
+  
+  return(rev(w))
+}
+#' 
 #' Plot exposure
 #'
 #' Display barplot of exposure extracted for a specific sample

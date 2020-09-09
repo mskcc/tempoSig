@@ -18,23 +18,26 @@
 #' 
 #' @export
 nmf <- function(catalog, denovo = FALSE, signat = NULL, K = NULL, nrun = 10, ard = FALSE,
-                   verbose = FALSE, progress.bar = FALSE, Itmax = 100000, Tol = 1e-5,
+                   verbose = FALSE, progress.bar = FALSE, Itmax = 100000, Tol = 1e-4,
                    a = 10, nprint = 100){
   
   mat <- catalog
   if(!is.matrix(mat)) mat <- as.matrix(catalog)
   nullr <- sum(Matrix::rowSums(mat)==0)
   nullc <- sum(Matrix::colSums(mat)==0)
-  if(nullr>0 & !denovo) stop('Input matrix contains empty rows')
+  if(nullr>0 & denovo) stop('Input matrix contains empty rows')
   if(nullc>0) stop('Input matrix contains empty columns')
   
   nrow <- dim(mat)[1]
   ncol <- dim(mat)[2]
   
-  if(!is.null(signat))
-    rank <- K <- NCOL(signat)
-  else if(is.null(K))
-    rank <- K <- nrow
+  if(is.null(K)){
+    if(!is.null(signat))
+      K <- NCOL(signat)
+    else
+      K <- nrow
+  }
+  rank <- K
   
   cc = nrow + ncol + a + 1  # ARD hyperparameters
   muv <- mean(mat)
@@ -99,8 +102,8 @@ nmf <- function(catalog, denovo = FALSE, signat = NULL, K = NULL, nrun = 10, ard
   if(progress.bar) close(pb)
   
   if(ard){
-    wmax <- wmax[, Kmax]
-    hmax <- hmax[Kmax, ]
+    wmax <- wmax[, Kmax, drop = FALSE]
+    hmax <- hmax[Kmax, , drop = FALSE]
   }
   cs <- colSums(wmax)
   wmax <- t(t(wmax) / cs)

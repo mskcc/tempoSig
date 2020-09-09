@@ -30,12 +30,18 @@
 #' h <- t(h)['Breast',]
 #' x <- simulateSpectra(h = h, N = 100)
 #' @export
-simulateSpectra <- function(W = NULL, pzero = 0, nmut = 100, h, N = 10, dilute.ultra = FALSE, min.mut = 1,
-                            distr = 'pois', vmr = 2){
+simulateSpectra <- function(W = NULL, pzero = 0, nmut = 100, h, N = 10, dilute.ultra = FALSE, 
+                            min.mut = 1, distr = 'pois', vmr = 2, Ntry = 10000){
 
-  if(is.null(W)) 
-    W <- read.table(system.file('extdata', 'cosmic_SigAnalyzer_SBS_signatures.txt',
+  if(is.null(W)) W <- 'SA'
+  if(is.character(W)){
+    if(W=='SA')
+      W <- read.table(system.file('extdata', 'cosmic_SigAnalyzer_SBS_signatures.txt',
                                 package = 'tempoSig'), header = TRUE, sep = '\t')
+    else(W=='SP')
+      W <- read.table(system.file('extdata', 'cosmic_sigProfiler_SBS_signatures.txt',
+                                package = 'tempoSig'), header = TRUE, sep = '\t')
+  }
   if(!is(W, 'matrix')) W <- as.matrix(W)
   m <- NROW(W)
   h <- h[h > 0]
@@ -51,12 +57,15 @@ simulateSpectra <- function(W = NULL, pzero = 0, nmut = 100, h, N = 10, dilute.u
   lsk <- h*nmut/(1 - pzero)  # process-dependent Poisson mean
   H <- matrix(0, nrow = K, ncol = N)
   for(i in seq(N)){
+    itry <- 0
     while(TRUE){
       for(k in seq(1, K)){
         if(pzero > 0) p = rbinom(n = 1, size = 1, prob = 1 - pzero)
         else p <- 1
         if(p==0) next()
-        if(distr=='pois')
+        if(distr=='delta')
+          H[k,i] <- lsk[k]
+        else if(distr=='pois')
           H[k, i] <- rpois(n = 1, lambda = lsk[k])  # poisson
         else if(distr=='nbinom'){
           if(vmr <= 1) stop('Invalid vmr in nbinom')
@@ -65,6 +74,8 @@ simulateSpectra <- function(W = NULL, pzero = 0, nmut = 100, h, N = 10, dilute.u
         else stop('Unknown distribution')
       }
       if(sum(H[,i]) >= min.mut) break()
+      itry <- itry + 1
+      if(itry > Ntry) stop('Maximum count generation tries exceeded')
     }
   }
   rownames(H) <- colnames(W)
@@ -72,7 +83,7 @@ simulateSpectra <- function(W = NULL, pzero = 0, nmut = 100, h, N = 10, dilute.u
   xmean <- W %*% H
   while(TRUE){
     X <- matrix(rpois(n = m*N, lambda = xmean), nrow = m, ncol= N, byrow=FALSE)
-    if(all(colSums(X) > 0)) break()  # repeat until all columns are non-empty
+    if(all(colSums(X) >= min.mut)) break()  # repeat until all columns are non-empty
   }
   rownames(X) <- rownames(W)
   if(dilute.ultra)
