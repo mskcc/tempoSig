@@ -22,7 +22,7 @@ Mutation context is the set of categories to which mutation data from sequencing
 
 The other input is the set of reference signature proportions:
 
-Mutation context | SBS1 | SBS2 | SBS3 | SBS4
+Mutation context | Signature.1 | Signature.2 | Signature.3 | Signature.4
 ---------------- | ---- | ---- | ---- | ----
 A[C>A]A          | 9e-4 | 6e-7 | 0.02 | 0.04
 A[C>A]C          | 2e-3 | 1e-4 | 0.02 | 0.03
@@ -36,14 +36,14 @@ The "refitting" (as opposed to de novo discovery) of signature propotion solves 
 where **X** is the catalog matrix, **W** is the signature matrix (assumed to be known and fixed), and **H** is the exposure matrix of dimension (no. of reference signatures x no. of samples). The maximum likelihood estimation (MLE) algorithm formulates this problem in terms of a multinomial statistical model with observed counts **X** of categorical groups (trinucleotide contexts) mixed by given fixed proportions **W**. **tempoSig** uses the quasi-Newton [Broyden-Fletcher-Goldfarb-Shanno (BFGS) algorithm](https://www.gnu.org/software/gsl/doc/html/multimin.html) for multi-dimensional optimization.
 The output matrix is the transpose of **H**:
 
-Tumor Sample Barcode | SBS1 | SBS2 | SBS3 | SBS4
+Tumor Sample Barcode | Signature.1 | Signature.2 | Signature.3 | Signature.4
 -------------------- | ---- | ---- | ---- | ----
 SAMPLE_1             | 0.37 | 0.01 | 0.00 | 0.00
 SAMPLE_2             | 0.31 | 0.18 | 0.00 | 0.00
 
 Each row is a vector of proportions that add up to 1.
 
-To estimate p-values of significance of each proportion, the input data for each sample (columns of **X**) are randomly shuffled by permutation to sample the null distribution. The exposure vectors inferred from these null samples are compared with the observed vector from the original data, with the p-value defined as the fraction of null samples whose proprotions are higher than the observed values.
+To estimate p-values of significance of each proportion, the signature profile of each reference signature (columns of **W**) are randomly shuffled by permutation to sample the null distribution. The exposure vectors inferred from these null samples are compared with the observed vector from the original data, with the p-value defined as the fraction of null samples whose proprotions are higher than the observed values.
 
 ## Installation
 Compilation requires GNU Scientific Library [(GSL)](https://www.gnu.org/software/gsl/). In Ubuntu Linux,
@@ -70,52 +70,58 @@ If you are not interested in interactive usages with more flexibility and functi
 If you cloned the repository, the file is located at the `./exec` subdirectory of the github main directory. We denote this package directory path as `PKG_PATH`. The command syntax is
 
     $ $PKG_PATH/exec/tempoSig.R -h
-    usage: ./tempoSig.R [-h] [--cosmic_v3 | --cosmic_v3_exome | --cosmic_v2]
-                    [--sigfile SIGFILE] [--pvalue] [--nperm NPERM]
+     usage: ./tempoSig.R [-h]
+                    [--cosmic_v2 | --cosmic_v3 | --cosmic_v3_SA | --cosmic_v3_exome]
+                    [--sigfile SIGFILE]
+                    [--pvalue]
+                    [--nperm NPERM]
                     [--seed SEED]
+                    [--pv.out PV.OUT]
                     CATALOG OUTPUT
 
-    Fit mutational catalog to signatures
+     Fit mutational catalog to signatures
 
-    positional arguments:
-      CATALOG            input catalog data file
-      OUTPUT             output file name
+     positional arguments:
+       CATALOG            input catalog data file
+       OUTPUT             output file name
 
-    optional arguments:
-      -h, --help         show this help message and exit
-      --cosmic_v3        use COSMIC v3 reference signatures (default)
-      --cosmic_v3_exome  use COSMIC v3 exome reference signatures
-      --cosmic_v2        use COSMIC v2 reference signatures
-      --sigfile SIGFILE  custom input reference signature file; overrides
-                         --cosmic_v3/2
-      --pvalue           estimate p-values (default FALSE)
-      --nperm NPERM      number of permutations for p-value estimation; default
-                         1000
-      --seed SEED        random number seed
-        
+     optional arguments:
+       -h, --help         show this help message and exit
+       --cosmic_v2        use COSMIC v2 reference signatures (default)
+       --cosmic_v3        use COSMIC v3 reference signatures
+       --cosmic_v3_SA     use COSMIC v3 SigAnalyzer reference signatures
+       --cosmic_v3_exome  use COSMIC v3 exome reference signatures
+       --sigfile SIGFILE  custom input reference signature file; overrides
+                          --cosmic_v2/3
+       --pvalue           estimate p-values (default FALSE)
+       --nperm NPERM      number of permutations for p-value estimation; default
+                          1000
+       --seed SEED        random number seed
+       --pv.out PV.OUT    p-value output file
+     
 Only two arguments are mandatory: `CATALOG` and `OUTPUT`, each specifying the paths of input catalog data and output file to be written. Both are tab-delimited text files with headers. See [tcga-brca_catalog.txt](https://github.com/mskcc/tempoSig/blob/master/inst/extdata/tcga-brca_catalog.txt) for a catalog file example. For instance,
 
     $ $PKG_PATH/exec/tempoSig.R $PKG_PATH/extdata/tcga-brca_catalog.txt output.txt
     
-fits catalog data for 10 samples in `tcga-brca_catalog.txt` to [COSMIC v3 signatures](https://github.com/mskcc/tempoSig/edit/master/inst/extdata/cosmic_sigProfiler_SBS_signatures.txt) (default). The output file `output.txt` has the following format:
+fits catalog data for 10 samples in `tcga-brca_catalog.txt` to [COSMIC v2 signatures](https://github.com/mskcc/tempoSig/edit/master/inst/extdata/cosmic_snv_signatures_v2.txt) (default). The output file `output.txt` has the following format:
 
-Sample Name    | Number of Mutations | SBS1 | SBS2 | SBS3 | SBS4
--------------- | ------------------- | ---- | ---- | ---- | ----
-TCGA.BH.A0EI   | 18                  | 0.37 | 0.00 | 0.00 | 0.00
-TCGA.E9.A22B   | 50                  | 0.31 | 0.18 | 0.00 | 0.00
-TCGA.OL.A5RV   | 10                  | 0.34 | 0.00 | 0.00 | 0.00 
+Sample Name    | Number of Mutations | Signature.1 | Signature.2 | Signature.3 | Signature.4
+-------------- | ------------------- | ----------- | ----------- | ----------- | -----------
+TCGA.BH.A0EI   | 18                  | 0.61        | 0.01        | 0.00        | 0.00
+TCGA.E9.A22B   | 50                  | 0.51        | 0.22        | 0.00        | 0.00
+TCGA.OL.A5RV   | 10                  | 0.41        | 0.00        | 0.23        | 0.00 
 
-The following will use the COSMIC version 2 signature:
+The following will use the [COSMIC v3 signatures](https://github.com/mskcc/tempoSig/edit/master/inst/extdata/cosmic_sigProfiler_SBS_signatures.txt):
 
-    $ $PKG_PATH/exec/tempoSig.R  --cosmic_v2 $PKG_PATH/extdata/tcga-brca_catalog.txt output_v2.txt
+    $ $PKG_PATH/exec/tempoSig.R  --cosmic_v3 $PKG_PATH/extdata/tcga-brca_catalog.txt output_v3.txt
 
-The output is similar, with the columns corresponding to 30 signatures:
+The output is similar, with the columns corresponding to 67 signatures:
 
-Sample Name    | Number of Mutations | Signature.1 | Signature.2 | Signature.3
+Sample Name    | Number of Mutations | SBS.1.      | SBS.2       | SBS.3
 -------------- | ------------------- | ----------- | ----------- | -----------
-TCGA.BH.A0EI   | 18                  | 0.609       | 0.066       | 0.000
-TCGA.E9.A22B   | 50                  | 0.508       | 0.217       | 0.000
-TCGA.OL.A5RV   | 10                  | 0.409       | 0.000       | 0.225 
+TCGA.BH.A0EI   | 18                  | 0.373       | 8.5e-3      | 0
+TCGA.E9.A22B   | 50                  | 0.310       | 0.180       | 0
+TCGA.OL.A5RV   | 10                  | 0.337       | 0           | 0 
 
 One can use a custom reference signature list (in the same format as the default version 3 file) via the optional argument `--sigfile SIGFILE`.
 
@@ -136,15 +142,15 @@ If a MAF file contains the column `Ref_Tri` [trinucleotide contexts surrounding 
       -h, --help  show this help message and exit
 
 ### P-value estimation
-Optionally, statistical significance of the set of proportions (rows in the exposure output) can be estimated by permutation sampling. The exposure inference for each sample is repeated multiple times after permutation of catalog data. P-values are the fractions of permuted replicates whose proportions (**H0**) are not lower than those of the original (**H1**). The p-value estimation is turned on by the argument `--pvalue`. The number of permutations is 1,000 by default and can be set with `--nperm NPERM`. The output has the format:
+Optionally, statistical significance of the set of proportions (rows in the exposure output) can be estimated by permutation sampling. For each signature, the exposure inference is repeated multiple times after permutation of the reference signature profile. P-values are the fractions of permuted replicates whose proportions (**H0**) are not lower than those of the original (**H1**). The p-value estimation is turned on by the argument `--pvalue`. The number of permutations is 1,000 by default and can be set with `--nperm NPERM`. The default output has the format:
 
-Sample Name          | Number of Mutations | SBS1.observed | SBS1.pvalue   | SBS2.observed | SBS2.pvalue
--------------------- | ------------------- | ------------- |-------------- | ------------- | -----------
-TCGA.BH.A0EI         | 18                  | 0.37          | 0             | 0.0085        | 0.15              
-TCGA.E9.A22B         | 50                  | 0.31          | 0             | 0.18          | 0              
-TCGA.OL.A5RV         | 10                  | 0.34          | 0             | 2.6e-11       | 0.30        
+Sample Name          | Number of Mutations | Signature.1.observed | Signature.1.pvalue   | Signature.2.observed | Signature.2.pvalue
+-------------------- | ------------------- | -------------------- | -------------------- | -------------------- | ------------------
+TCGA.BH.A0EI         | 18                  | 0.61                 | 0                    | 0.066                | 0.05              
+TCGA.E9.A22B         | 50                  | 0.51                 | 0                    | 0.20                 | 0              
+TCGA.OL.A5RV         | 10                  | 0.41                 | 0.6                  | 1.2e-11              | 0.55        
 
-Note that p-value of 0 indicates that out of `NPERM` samples, none exceeded **H1**, and therefore must be interpreted as *P* < 1/`NPERM`.
+Note that p-value of 0 indicates that out of `NPERM` samples, none exceeded **H1**, and therefore must be interpreted as *P* < 1/`NPERM`. Alternatively, one can have two output files, one for exposure and the other for p-vaues, by specifiying the argument `--pv.out PV.OUT`. The exposure output `OUTPUT` is in the same format as that without p-value computation. The p-value output `PV.OUT` has the analogous format with columns for each signature p-values.
 
 ## Documentation
 
