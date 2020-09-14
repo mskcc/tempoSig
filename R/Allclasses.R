@@ -53,15 +53,15 @@ tempoSig <- function(data, signat = 'v2'){
   if(is(signat, 'data.frame')) signat <- as.matrix(signat)
   else if(!is(signat, 'matrix')){
     if(!is(signat, 'character')) stop('Unusuable input of signat')
-    if(is.null(signat) | signat == 'SA')
+    if(is.null(signat) | signat == 'v2')
+      signat <- as.matrix(read.table(system.file('extdata/cosmic_snv_signatures_v2.txt', 
+                                                 package = 'tempoSig')))
+    else if(signat == 'SA')
       signat <- as.matrix(read.table(system.file('extdata/cosmic_SigAnalyzer_SBS_signatures.txt', 
                     package = 'tempoSig')))
     else if(signat == 'SP')
       signat <- as.matrix(read.table(system.file('extdata/cosmic_sigProfiler_SBS_signatures.txt', 
                     package = 'tempoSig')))
-    else if(signat == 'v2')
-      signat <- as.matrix(read.table(system.file('extdata/cosmic_snv_signatures_v2.txt', 
-                                                 package = 'tempoSig')))
     else{
       if(!file.exists(signat)) stop(paste0('File ',signat,' does not exist'))
       signat <- as.matrix(read.table(signat))
