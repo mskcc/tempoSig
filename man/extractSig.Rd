@@ -37,8 +37,10 @@ extractSig(
 
 \item{progress.bar}{Display progress bar}
 
-\item{pvtest}{Algorithm for p-value computation; \code{c('permutation','lrt')} for
-permutation resampling or likelihood ratio test}
+\item{pvtest}{Algorithm for p-value computation; 
+\code{c('permutation','lrt','x.permutation')} for permutation resampling of 
+signatures, likelihood ratio test (asymptotic formula), or
+permutation of count data.}
 
 \item{...}{Other parameters for \code{denovo} with \code{method = 'hnmf'}}
 }

@@ -6,7 +6,7 @@
 \usage{
 run_tSig(
   catalog,
-  signat = "SA",
+  signat = "v2",
   nperm = 1000,
   alpha = 0.05,
   output = "exposure.txt"
@@ -15,8 +15,8 @@ run_tSig(
 \arguments{
 \item{catalog}{Catalog input file}
 
-\item{signat}{Reference signature choices, \code{c('SA','SP', 'cosmic2')} for sigAnalyzer, sigProfiler, and
-COSMIC version 2, respectively}
+\item{signat}{Reference signature choices, \code{c('v2','SA','SP')} for sCOSMIC v2, 
+SigAnalyzer, and sigProfiler, respectively}
 
 \item{nperm}{No. of permutations}
 
@@ -25,5 +25,5 @@ COSMIC version 2, respectively}
 \item{output}{Output file}
 }
 \description{
-One-step execution of exposure inference, filtering, and outpiut
+One-step execution of exposure inference, filtering, and output
 }

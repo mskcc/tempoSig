@@ -13,7 +13,8 @@ simulateSpectra(
   dilute.ultra = FALSE,
   min.mut = 1,
   distr = "pois",
-  vmr = 2
+  vmr = 2,
+  Ntry = 10000
 )
 }
 \arguments{

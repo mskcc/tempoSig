@@ -4,7 +4,14 @@
 \alias{writeExposure}
 \title{Write Exposure}
 \usage{
-writeExposure(object, output, sep = "\\t", rm.na = FALSE, pv.out = NULL)
+writeExposure(
+  object,
+  output,
+  sep = "\\t",
+  rm.na = FALSE,
+  pv.out = NULL,
+  cBio.format = FALSE
+)
 }
 \arguments{
 \item{object}{Object of class \code{tempoSig}}
@@ -17,6 +24,9 @@ writeExposure(object, output, sep = "\\t", rm.na = FALSE, pv.out = NULL)
 
 \item{pv.out}{File name for p-value output. If \code{NULL}, \code{output}
 file is written with alternating observed and p-value columns.}
+
+\item{cBio.format}{File output in cBioPortal \code{Generic Assay} format; 
+only works with \code{pv.out != NULL}}
 }
 \description{
 Save a text output of exposures

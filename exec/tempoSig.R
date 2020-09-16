@@ -24,6 +24,8 @@ parser$add_argument('--seed', dest = 'seed', action = 'store', type = 'integer',
                     help = 'random number seed')
 parser$add_argument('--pv.out', dest = 'pv.out', action = 'store', 
                     help = 'p-value output file')
+parser$add_argument('--cbio', action = 'store_true', default = FALSE,
+                    help = 'output in cBioPortal format (default FALSE)')
 args <- parser$parse_args()
 
 if(!is.null(args$seed)) set.seed(args$seed)
@@ -41,7 +43,12 @@ if(!is.null(args$sigfile)){  # custom signature file provided
   sig <- 'v2'
 }
 
+if(args$cbio & args$pvalue & is.null(args$pv.out)){
+  args$pv.out <- 'pvalues.txt'
+}
+
 data <- read.table(args$catalog, header = TRUE, sep = '\t')
 x <- tempoSig(data = data, signat = sig)
 x <- extractSig(object = x, compute.pval = args$pvalue, nperm = args$nperm, progress.bar = TRUE)
-writeExposure(object = x, output = args$output, pv.out = args$pv.out, sep = '\t')
+writeExposure(object = x, output = args$output, pv.out = args$pv.out, sep = '\t', 
+              cBio.format = args$cbio)

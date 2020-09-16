@@ -100,15 +100,19 @@ plotExposure <- function(object, sample.id, cutoff = 1e-3, ...){
 #' @param rm.na Remove rows with NAs (mutation load below minimum)
 #' @param pv.out File name for p-value output. If \code{NULL}, \code{output}
 #'        file is written with alternating observed and p-value columns.
+#' @param cBio.format File output in cBioPortal \code{Generic Assay} format; 
+#'        only works with \code{pv.out != NULL}
 #'
 #' @export
-writeExposure <- function(object, output, sep = '\t', rm.na = FALSE, pv.out = NULL){
+writeExposure <- function(object, output, sep = '\t', rm.na = FALSE, pv.out = NULL,
+                          cBio.format = FALSE){
 
   if(!is(object, 'tempoSig')) stop('Object is not of class tempoSig')
   if(!is.character(output)) stop('Output file name must be characters')
   if(!sep %in% c(' ','\t')) stop('Delimiter must be either space or tab')
   expo <- expos(object)
   if(all(dim(expo) == 0)) stop('Exposure in object empty')
+  if(cBio.format & is.null(pv.out)) stop('cBio.format requires pv.out')
  
   bad <- apply(expo, 1, function(x){all(is.na(x))})
   if(rm.na){
@@ -143,8 +147,20 @@ writeExposure <- function(object, output, sep = '\t', rm.na = FALSE, pv.out = NU
     }
   }
   
-  colnames(out)[1:2] <- c('Sample Name', 'Number of Mutations') # compatibility
-  if(!is.null(pv.out)) colnames(pout)[1:2] <- colnames(out)[1:2]
+  if(!cBio.format){
+    colnames(out)[1:2] <- c('Sample Name', 'Number of Mutations') # compatibility
+    if(!is.null(pv.out)) colnames(pout)[1:2] <- colnames(out)[1:2]
+  } else{
+    out <- out[,-2, drop = FALSE]   # remove no. of mutation column
+    colnames(out)[1] <- 'ENTITY_STABLE_ID'
+    nc <- NCOL(out)
+    colnames(out)[seq(2, nc)] <- toupper(colnames(out)[seq(2, nc)])
+    if(exists('pout')){
+      pout <- pout[,-2, drop = FALSE]
+      colnames(pout)[1] <- 'ENTITY_STABLE_ID'
+      colnames(pout)[seq(2, nc)] <- toupper(colnames(pout)[seq(2, nc)])
+    }
+  }
   
   write.table(out, file = output, sep = sep, row.names = F, quote = F)
   if(!is.null(pv.out)) write.table(pout, file = pv.out, sep = sep, row.names = F,
