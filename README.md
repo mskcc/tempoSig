@@ -76,7 +76,8 @@ If you cloned the repository, the file is located at the `./exec` subdirectory o
                     [--pvalue]
                     [--nperm NPERM]
                     [--seed SEED]
-                    [--pv.out PV.OUT]
+                    [--pv.out PV.OUT] 
+                    [--cbio]
                     CATALOG OUTPUT
 
      Fit mutational catalog to signatures
@@ -98,6 +99,7 @@ If you cloned the repository, the file is located at the `./exec` subdirectory o
                           1000
        --seed SEED        random number seed
        --pv.out PV.OUT    p-value output file
+       --cbio             output in cBioPortal format (default FALSE)
      
 Only two arguments are mandatory: `CATALOG` and `OUTPUT`, each specifying the paths of input catalog data and output file to be written. Both are tab-delimited text files with headers. See [tcga-brca_catalog.txt](https://github.com/mskcc/tempoSig/blob/master/inst/extdata/tcga-brca_catalog.txt) for a catalog file example. For instance,
 
