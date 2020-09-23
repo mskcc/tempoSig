@@ -151,14 +151,28 @@ writeExposure <- function(object, output, sep = '\t', rm.na = FALSE, pv.out = NU
     colnames(out)[1:2] <- c('Sample Name', 'Number of Mutations') # compatibility
     if(!is.null(pv.out)) colnames(pout)[1:2] <- colnames(out)[1:2]
   } else{
+    if(sum(is.na(rownames(out)))) 
+      rownames(out) <- out[,2]
     out <- out[,-2, drop = FALSE]   # remove no. of mutation column
-    colnames(out)[1] <- 'ENTITY_STABLE_ID'
-    nc <- NCOL(out)
-    colnames(out)[seq(2, nc)] <- toupper(colnames(out)[seq(2, nc)])
+    if(colnames(out)[2]=='Signature.1')  # v2
+      annot <- read.csv(system.file('extdata', 'msig_cBioPortal_v2.csv', package = 'tempoSig'))
+    else  # v3
+      annot <- read.csv(system.file('extdata', 'msig_cBioPortal_v3.csv', package = 'tempoSig'))
+    idx <- match(colnames(out)[-1], annot[,1])
+    out <- cbind(data.frame(
+            ENTITTY_STABLE_ID = paste('mutational_signature_contribution', annot[,1], sep='_'),
+            NAME = annot[,2], 
+            DESCRIPTION = annot$Description,
+            URL = annot$URL), t(as.matrix(out[,-1]))[idx,])
     if(exists('pout')){
-      pout <- pout[,-2, drop = FALSE]
-      colnames(pout)[1] <- 'ENTITY_STABLE_ID'
-      colnames(pout)[seq(2, nc)] <- toupper(colnames(pout)[seq(2, nc)])
+      if(sum(is.na(rownames(pout)))) 
+        rownames(pout) <- pout[,2]
+      pout <- pout[,-2, drop = FALSE]   # remove no. of mutation column
+      pout <- cbind(data.frame(
+        ENTITTY_STABLE_ID = paste('mutational_signature_contribution', annot[,1], sep='_'),
+        NAME = annot[,2], 
+        DESCRIPTION = annot$Description,
+        URL = annot$URL), t(as.matrix(pout[,-1]))[idx,])
     }
   }
   
