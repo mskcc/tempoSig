@@ -5,8 +5,7 @@ Version: 0.4.1
 Author: Jun Woo
 Maintainer: Jun Woo <wooh@mskcc.org>
 Depends: R (>= 3.6.0)
-Imports: gtools, Rcpp (>= 0.12.16), utils, argparse, coneproj,
-        data.table, ggplot2, reshape2
+Imports: gtools, Rcpp (>= 0.12.16), utils, argparse, coneproj, data.table
 Description: Infers mutation signature exposures from mutation catalog data and
     known signature list. Also includes associated utility functions for significance 
     tests and confidence intervals.
