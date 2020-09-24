@@ -5,14 +5,17 @@
 \alias{tempoSig}
 \title{Create \code{tempoSig} object}
 \usage{
-tempoSig(data, signat = NULL)
+tempoSig(data, signat = "v2")
 }
 \arguments{
 \item{data}{Input data of mutation catalog; samples in columns
 and mutation types in rows.}
 
-\item{signatures}{Reference signatures table; default is COSMIC
-version 3 signatures.}
+\item{signat}{Reference signatures table; default is COSMIC
+version 3 signatures. It can be a matrix of the table, the file name
+containing the table, or character code \code{c('v2', 'SA','SP')},
+signifying \code{COSMIC v2}, \code{sigAnalyzer}, or
+\code{SigProfiler} references (the latter two are COSMIC v3).}
 }
 \value{
 Object of class \code{tempoSig}.

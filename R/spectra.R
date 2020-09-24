@@ -14,9 +14,7 @@
 #' @param min.mut Minimum mutation load
 #' @param distr Underlying distribution of exposure counts; 
 #'        \code{c('pois', 'nbinom')}, either Poisson or negative binomial.
-#'        If \code{nbinom}, \code{size} parameter is set such that
-#'        standard deviation to mean ratio is constant.
-#' @param alpha Standard deviation to mean ratio of negative binomial.
+#' @param vmr Variance to mean ratio of negative binomial.
 #' @return List of components \code{X}: simulated mutation counts;
 #'         \code{W}, \code{H}: signature and exposure matrices.
 #' @examples
@@ -32,13 +30,18 @@
 #' h <- t(h)['Breast',]
 #' x <- simulateSpectra(h = h, N = 100)
 #' @export
-simulateSpectra <- function(W = NULL, pzero = 0.3, nmut = 100, h, N = 10,
-                            dilute.ultra = FALSE, min.mut = 1,
-                            distr = 'pois', alpha = 0.2){
+simulateSpectra <- function(W = NULL, pzero = 0, nmut = 100, h, N = 10, dilute.ultra = FALSE, 
+                            min.mut = 1, distr = 'pois', vmr = 2, Ntry = 10000){
 
-  if(is.null(W)) 
-    W <- read.table(system.file('extdata', 'cosmic_sigProfiler_SBS_signatures.txt',
+  if(is.null(W)) W <- 'SA'
+  if(is.character(W)){
+    if(W=='SA')
+      W <- read.table(system.file('extdata', 'cosmic_SigAnalyzer_SBS_signatures.txt',
                                 package = 'tempoSig'), header = TRUE, sep = '\t')
+    else(W=='SP')
+      W <- read.table(system.file('extdata', 'cosmic_sigProfiler_SBS_signatures.txt',
+                                package = 'tempoSig'), header = TRUE, sep = '\t')
+  }
   if(!is(W, 'matrix')) W <- as.matrix(W)
   m <- NROW(W)
   h <- h[h > 0]
@@ -53,24 +56,35 @@ simulateSpectra <- function(W = NULL, pzero = 0.3, nmut = 100, h, N = 10,
   if(pzero < 0 | pzero > 1) stop('Invalid pzero value')
   lsk <- h*nmut/(1 - pzero)  # process-dependent Poisson mean
   H <- matrix(0, nrow = K, ncol = N)
-  for(k in seq(1, K)){
-    p = rbinom(n = N, size = 1, prob = 1 - pzero)
-    np <- sum(p==1)
-    if(np ==0) next()
-    if(distr=='pois')
-      H[k, p==1] <- rpois(n = np, lambda = lsk[k])  # poisson
-    else if(distr=='nbinom')
-      H[k, p==1] <- rpnb(n = np, mu = lsk[k], alpha = alpha)
-    else stop('Unknown distribution')
-  }
-  if(min.mut > 0){
-    H <- H[, colSums(H) >= min.mut]
-    N <- NCOL(H)
+  for(i in seq(N)){
+    itry <- 0
+    while(TRUE){
+      for(k in seq(1, K)){
+        if(pzero > 0) p = rbinom(n = 1, size = 1, prob = 1 - pzero)
+        else p <- 1
+        if(p==0) next()
+        if(distr=='delta')
+          H[k,i] <- lsk[k]
+        else if(distr=='pois')
+          H[k, i] <- rpois(n = 1, lambda = lsk[k])  # poisson
+        else if(distr=='nbinom'){
+          if(vmr <= 1) stop('Invalid vmr in nbinom')
+          H[k, i] <- rnbinom(n = 1, size = lsk[k]/(vmr-1), mu = lsk[k])
+        }
+        else stop('Unknown distribution')
+      }
+      if(sum(H[,i]) >= min.mut) break()
+      itry <- itry + 1
+      if(itry > Ntry) stop('Maximum count generation tries exceeded')
+    }
   }
   rownames(H) <- colnames(W)
 
   xmean <- W %*% H
-  X <- matrix(rpois(n = m*N, lambda = xmean), nrow = m, ncol= N, byrow=FALSE)
+  while(TRUE){
+    X <- matrix(rpois(n = m*N, lambda = xmean), nrow = m, ncol= N, byrow=FALSE)
+    if(all(colSums(X) >= min.mut)) break()  # repeat until all columns are non-empty
+  }
   rownames(X) <- rownames(W)
   if(dilute.ultra)
     X <- diluteUltraMutated(X)
@@ -79,18 +93,6 @@ simulateSpectra <- function(W = NULL, pzero = 0.3, nmut = 100, h, N = 10,
   return(x)
 }
 
-# "Fat" negative binomial
-# n = no. of observations
-# mu = mean
-# alpha = SD / mean ratio
-rpnb <- function(n, mu, alpha){
-  
-  if(alpha < 1/sqrt(mu))
-    rpois(n = n, lambda = mu)
-  else
-    rnbinom(n = n, size = 1/(alpha^2 - 1/mu), mu = mu)
-  
-}
 # Dilute ultra-mutated samples (Kim et al. DOI: 10.1038/hg.3557)
 
 diluteUltraMutated <- function(X, maxiter=100){

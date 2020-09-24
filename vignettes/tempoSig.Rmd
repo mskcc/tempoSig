@@ -26,11 +26,12 @@ The package `tempoSig` implements mutational signature inference functions and
 utilities primarily based on maximum likelihood algorithms.
 Input data are mutational catalogs in the form of matrices, which catalog counts of
 mutation types found in multiple samples into pre-defined classes. The most 
-often-used example is the catalog of single nucleotide substitutions (SBSs) cataloged 
+often-used example is the catalog of single nucleotide substitutions (SBSs) grouped 
 into trinucleotide contexts in which they occur. Mutational signatures are the
 patterns of the combination of these genetic features recurrent in tumor samples
-[@nikzainal2012; @alexandrov2013; @alexandrov2020]. Up to [~60 recurrent signatures](https://cancer.sanger.ac.uk/cosmic/signatures)
-have been established from a recent study of whole genome sequences of tumor
+[@nikzainal2012; @alexandrov2013; @alexandrov2020]. Up to 30 or ~60 recurrent 
+[signatures](https://cancer.sanger.ac.uk/cosmic/signatures)
+have been established from studies of whole genome and exome sequences of tumor
 samples [@alexandrov2020]. The discovery of these signatures is based on mathematical
 decompositions of mutational *catalog*, represented by a matrix $\sf{X}$, of a large sample set into two matrices, 
 $$
@@ -39,7 +40,7 @@ $$
 where $\sf{W}$ and $\sf{H}$ are *signature* and *exposure* matrices, each containing
 repertoires of signatures associated with mutational processes operative in samples 
 and the actual numbers of mutations contributed by each signature to individual sample genomes, respectively. The symbol $\sim$ indicates that the actual data are to be 
-regarded as realizations of the mean given by the product on the right.
+regarded as (Poisson) realizations of the mean given by the product on the right.
 
 Two classes of analysis tasks encountered in genetic studies are *de novo* discovery
 of signatures and *refitting*: in *de novo* discovery, both *signature* and *exposure*
@@ -102,16 +103,43 @@ BFGS2 (Broyden-Fletcher-Goldfarb-Shanno) routine
 
 For real mutational data with limited sizes (mutational load $M \sim 100$ or less),
 it is important to gauge the statistical significance of exposure outcomes
-($h_k$ for $k=1,\cdots,K$). In `tempoSig`, $p$-values for each exposure are estimated
-by permutation resampling. The catalog data $m_i$ for $i=1,\cdots,c$ are randomly
-permuted $N_p$ times and inferences are repeated for each replicate to get
-exposure samples under the null hypothesis $\{ h_{k}^{(j)}\}$, where 
-$j=1,\cdots, N_p$ is the index for permutation replicates.
+($h_k$ for $k=1,\cdots,K$). In `tempoSig`, $p$-values for each exposure can be estimated
+with one of three algorithms:
+
+1. Permutation test of signatures (`permutation`)
+2. Likelihood ratio test (`lrt`)
+3. Permutation sampling of count data (`x.permutation`)
+
+With signature permutation (default), the 96 elements of the reference signature vector
+$W_{ik}$ for signature $k$ is randomly permuted $N_p$ times. Inference is repeated for each
+replicate to get exposure samples under the null hypothesis, $\{h_{k}^{(j)}\}$, 
+where $j=1,\cdots, N_p$ is the index for permutation replicates.
 The $p$-value estimate for the $k$-th signature exposure is
 $$
 P_{k} = \frac{1}{N_p} \sum_j I\left(h_{k}^{(j)} \ge h_{k}\right),
 $$
 where $I(x)$ is the indicator function; i.e., the proportion of replicates for which the observed exposure did not exceed the null values.
+Note that the resulting p-values are limited in range, with apparent $P_k=0$ indicating that
+$P_k < 1/N_p$.
+
+In likelihood ratio test, the deviance
+$$
+D_k = 2M\left[ L - L(x_k=0)\right],
+$$
+where $L(x_k=0)$ is the likelihood of the restricted model of signature $k$ exposure zero,
+is computed. This deviance is distributed by $\chi^2$ with ${\rm d.f.}=1$ in the 
+asymptotic limit $M\rightarrow\infty$ [@degroot_schervish]. Empirical tests suggest 
+this asymptotic limit is satisfied if $M\sim 10^3$ or larger and the p-value
+computed will generally be an over-estimate. Therefore, we advise 
+caution in using the likelihood ratio test for smaller mutation load. However, this test
+can give a quick upper bound estimate of p-values, especially for cases where $P < 10^{-4}$
+and permutation test only gives ``zero`` p-values.
+
+Finally, in count permutation, the catalog data $m_i$ for $i=1,\cdots,c$ are randomly
+permuted while keeping signatures fixed. This scheme is applied once 
+to all signatures and requires less computation than signature permutation. We found
+it to genereally yield results similar to signature permutation but does not
+adequately deal with ``unspecific'' signatures such as Signature 3 (homologous recombination defect). 
 
 # Software usage
 
@@ -182,30 +210,38 @@ The object initiation also can include specification of reference signatures via
 the optional second argument in `tempoSig(data, signat = NULL)`, which by default
 is read from the file
 ```{r}
-sbs <- read.table(system.file('extdata', 'cosmic_sigProfiler_SBS_signatures.txt',
+sbs <- read.table(system.file('extdata', 'cosmic_snv_signatures_v2.txt',
                               package = 'tempoSig'))
 dim(sbs)
 sbs[1:5, 1:5]
 colnames(sbs)
 ```
 This reference signature list is that of 
-[COSMIC version 3](https://cancer.sanger.ac.uk/cosmic/signatures/SBS) derived from
-the whole genome data sets. There are other files for alternative references
-also included:
+[COSMIC version 2](https://cancer.sanger.ac.uk/cosmic/signatures_v2.tt).
+There are other files for alternative references also included:
 
-* `cosmic_sigProfiler_exome_SBS_signatures.txt`: COSMIC version 3 from exome data
-* `cosmic_snv_signatures_v2.txt`: COSMIC version 2 (30 signatures)
+* `cosmic_sigProfiler_SBS_signatures.txt`: COSMIC version 3 from whole-genome data (sigProfiler)
+* `cosmic_sigProfiler_SBS_exome_signatures.txt`: COSMIC version 3 from exome data
+* `cosmic_SigAnalyzer_SBS_signatures.txt`: COSMIC version 3 from whole-genome data (SigAnalyzer)
 
 They can be used as follows:
 ```{r}
-sig2 <- read.table(system.file('extdata', 'cosmic_snv_signatures_v2.txt',
+sig2 <- read.table(system.file('extdata', 'cosmic_SigAnalyzer_SBS_signatures.txt',
                                package = 'tempoSig'))
 dim(sig2)
 sig2[1:5, 1:5]
 s2 <- tempoSig(data = x, signat = sig2)
 s2
 ```
-The `signat` argument can also take the file name directly.
+The `signat` argument can take the file name directly. For convenience, a character
+short-hand can also be used:
+```{r, eval = TRUE}
+s_v2 <- tempoSig(data = x, signat = 'v2')  # COSMIC v2 (default)
+s_v3 <- tempoSig(data = x, signat = 'SA')  # COSMIC v3 SigAnalyzer
+s_v4 <- tempoSig(data = x, signat = 'SP')  # COSMIC v3 sigProfiler
+s_v3
+```
+We found that `v2` generally achieves higher power than others under limited mutation loads.
 
 The slots of a `tempoSig` object can be accessed via accessor functions:
 ```{r}
@@ -259,18 +295,36 @@ pvalue(s)
 The flag `compute.pval = TRUE` turns it on:
 ```{r, eval = FALSE, echo= TRUE}
 set.seed(135)
-s <- extractSig(s, compute.pval = TRUE, nperm = 1000, progress.bar = TRUE)
+s <- extractSig(s, compute.pval = TRUE, pvtest = 'permutation', nperm = 1000, 
+                progress.bar = TRUE)
 ```
 ```{r, eval = TRUE, echo = FALSE, cache=TRUE}
 set.seed(135)
-s <- extractSig(s, compute.pval = TRUE, nperm = 1000, progress.bar = FALSE)
+s <- extractSig(s, compute.pval = TRUE, pvtest = 'permutation', nperm = 1000, 
+                progress.bar = FALSE)
 ```
 ```{r}
 pvalue(s)[1:5, 1:5]
 ```
+The above uses the default signature permutation algorithm. 
 Note that with the number of permutations `nperm = 1000` (default), the 
 lowest non-zero pvalue is $1/1000$. Therefore, the value of 0 indicates
 $P < 1/1000$.
+The other two options for algorithm are `pvtest = 'lrt'` (likelihood ratio test) and
+`pvtest = 'x.permutation'` (count permutation; see above). We try the `lrt` 
+for comparison:
+```{r, eval = FALSE, echo = TRUE}
+sl <- extractSig(s, compute.pval = TRUE, pvtest = 'lrt', progress.bar = TRUE)
+```
+```{r, eval = TRUE, echo = FALSE}
+sl <- extractSig(s, compute.pval = TRUE, pvtest = 'lrt', progress.bar = FALSE)
+```
+```{r}
+pvalue(sl)[1:5,1:5]
+```
+Note how $P=0$ in `permutation` comes out as nonzero from `lrt` but generally the values 
+from the latter are larger in magnitude (over-estimation arising from the use
+of asymptotic $\chi^2$ distrubtion).
 
 ## Visualization and output
 
@@ -287,16 +341,24 @@ proportions with the minimum value supplied.
 The $p$-values
 ```{r}
 p <- pvalue(s)[sid,]
-p[c('SBS1', 'SBS2', 'SBS7b', 'SBS7d', 'SBS10b', 'SBS19', 'SBS51', 'SBS52')]
+p[c('Signature.1','Signature.2','Signature.19','Signature.22')]
 ```
-indicate `SBS2`, `SBS10b`, and `SBS52` are insignificant.
+indicate `Signature.22` is insignificant and 'Signature.2' is borderline. 
+We can get a non-zero upper bound for the
+`Signature.1` p-value using `lrt`:
+```{r}
+p2 <- pvalue(sl)[sid,]
+p2[c('Signature.1','Signature.2','Signature.19','Signature.22')]
+```
+Again, note the over-estimation under `lrt`.
 
-In addition,
+The function
 ```{r, eval=FALSE}
 writeExposure(s, output = 'exposure.tsv', sep = '\t', rm.na = TRUE)
 ```
-will write the exposure, along with $p$-values if any, to a single file. Alternatively, one can choose
-to write two files, one for exposure and the other for $p$-values via
+will write the exposure, along with $p$-values if any, to a single file. 
+Alternatively, one can choose to write two files, one for exposure and the other for
+$p$-values via
 ```{r, eval=FALSE}
 writeExposure(s, output = 'exposure.tsv', pv.out = 'pvalues.tsv')
 ```

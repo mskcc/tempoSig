@@ -1,3 +1,21 @@
+tempoSig 0.4.0
+===============
+Changes (09/04/20):
+
+* P-value computation using signature permutation (default):
+   > b <- extractSig(..., pvtest = 'permutation')
+* P-value using likelihood ratio test (caution):
+   > b <- extractSig(..., pvtest = 'lrt')
+* Default reference signature changed to COSMIC v2:
+   > b <- tempoSig(data = x, signat = 'v2')
+   
+tempoSig 0.2.3
+===============
+Changes (06/08/20):
+
+* Signature Analyzer (SA) reference signature added:
+  extdata/cosmic_SigAnalyzer_SBS_signatures.txt
+
 tempoSig 0.2.2
 ===============
 Changes (05/15/20):

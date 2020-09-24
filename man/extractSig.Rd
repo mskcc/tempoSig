@@ -12,7 +12,10 @@ extractSig(
   min.tmb = 2,
   compute.pval = FALSE,
   nperm = 1000,
-  progress.bar = FALSE
+  progress.bar = FALSE,
+  pvtest = "permutation",
+  cosmic = TRUE,
+  ...
 )
 }
 \arguments{
@@ -33,6 +36,13 @@ extractSig(
 \item{nperm}{Number of permutations}
 
 \item{progress.bar}{Display progress bar}
+
+\item{pvtest}{Algorithm for p-value computation; 
+\code{c('permutation','lrt','x.permutation')} for permutation resampling of 
+signatures, likelihood ratio test (asymptotic formula), or
+permutation of count data.}
+
+\item{...}{Other parameters for \code{denovo} with \code{method = 'hnmf'}}
 }
 \description{
 Use known signature list to find the most likely exposures in samples

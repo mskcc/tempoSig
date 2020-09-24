@@ -6,14 +6,15 @@
 \usage{
 simulateSpectra(
   W = NULL,
-  pzero = 0.3,
+  pzero = 0,
   nmut = 100,
   h,
   N = 10,
   dilute.ultra = FALSE,
   min.mut = 1,
   distr = "pois",
-  alpha = 0.2
+  vmr = 2,
+  Ntry = 10000
 )
 }
 \arguments{
@@ -33,11 +34,9 @@ length equal to the number of columns in \code{W}.}
 \item{min.mut}{Minimum mutation load}
 
 \item{distr}{Underlying distribution of exposure counts; 
-\code{c('pois', 'nbinom')}, either Poisson or negative binomial.
-If \code{nbinom}, \code{size} parameter is set such that
-standard deviation to mean ratio is constant.}
+\code{c('pois', 'nbinom')}, either Poisson or negative binomial.}
 
-\item{alpha}{Standard deviation to mean ratio of negative binomial.}
+\item{vmr}{Variance to mean ratio of negative binomial.}
 }
 \value{
 List of components \code{X}: simulated mutation counts;

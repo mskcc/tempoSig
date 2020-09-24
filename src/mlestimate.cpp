@@ -93,8 +93,12 @@ double lnl(const gsl_vector *v, void *params){
     E -= D[i]*log(p1/p0);
     sum += p1/p0;
   }
-  if(sum > 1.0 || sum < 0) Rcpp::Rcerr << "Error in lnl\n";
-  E -= D[M-1]*log(1-sum);
+//if(sum > 1.0 || sum < 0){
+  if(sum > 1.000001 || sum < 0)
+    Rcpp::stop("Error in lnl\n");
+  if(sum < 1.0)
+    E -= D[M-1]*log(1-sum);
+  else E -= D[M-1]*log(sum-1);
 
   return E;
 }

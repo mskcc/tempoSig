@@ -20,6 +20,43 @@ trinucleotides <- function(nt = 'ACGT', brackets = TRUE, arrows = TRUE){
   return(w)
 }
 
+#' Dinucleotide labels
+#' 
+#' @export
+dinucleotides <- function(nt = 'ACGT'){
+  
+  nt2 <- strsplit(nt, split='')[[1]]
+  src <- c('AC','AT','CC','CG','CT','GC','TA','TC','TG','TT') # source dinucleotide
+  dbs <- NULL
+  for(i in seq_along(src)){
+    si <- src[i]
+    sn <- strsplit(si,split='')[[1]]
+    for(x in nt2[nt2!=sn[1]]) for(y in nt2[nt2!=sn[2]]){
+      tgt <- c(x,y)
+      sn2 <- rcmp(sn)
+      tg2 <- rcmp(tgt)
+      db <- paste(c(si,'>',tgt),collapse='')
+      db2 <- paste(c(sn2,'>',tg2),collapse='')
+      if(!db %in% dbs & !db2 %in% dbs){
+        if(i %in% c(4,7)) dbs <- c(dbs, db2)
+        else dbs <- c(dbs, db)
+      }
+    }
+  }
+  return(dbs)
+}
+
+rcmp <- function(x){
+  
+  w <- x
+  w[x=='A'] <- 'T'
+  w[x=='C'] <- 'G'
+  w[x=='G'] <- 'C'
+  w[x=='T'] <- 'A'
+  
+  return(rev(w))
+}
+#' 
 #' Plot exposure
 #'
 #' Display barplot of exposure extracted for a specific sample
@@ -63,15 +100,19 @@ plotExposure <- function(object, sample.id, cutoff = 1e-3, ...){
 #' @param rm.na Remove rows with NAs (mutation load below minimum)
 #' @param pv.out File name for p-value output. If \code{NULL}, \code{output}
 #'        file is written with alternating observed and p-value columns.
+#' @param cBio.format File output in cBioPortal \code{Generic Assay} format; 
+#'        only works with \code{pv.out != NULL}
 #'
 #' @export
-writeExposure <- function(object, output, sep = '\t', rm.na = FALSE, pv.out = NULL){
+writeExposure <- function(object, output, sep = '\t', rm.na = FALSE, pv.out = NULL,
+                          cBio.format = FALSE){
 
   if(!is(object, 'tempoSig')) stop('Object is not of class tempoSig')
   if(!is.character(output)) stop('Output file name must be characters')
   if(!sep %in% c(' ','\t')) stop('Delimiter must be either space or tab')
   expo <- expos(object)
   if(all(dim(expo) == 0)) stop('Exposure in object empty')
+  if(cBio.format & is.null(pv.out)) stop('cBio.format requires pv.out')
  
   bad <- apply(expo, 1, function(x){all(is.na(x))})
   if(rm.na){
@@ -106,8 +147,34 @@ writeExposure <- function(object, output, sep = '\t', rm.na = FALSE, pv.out = NU
     }
   }
   
-  colnames(out)[1:2] <- c('Sample Name', 'Number of Mutations') # compatibility
-  if(!is.null(pv.out)) colnames(pout)[1:2] <- colnames(out)[1:2]
+  if(!cBio.format){
+    colnames(out)[1:2] <- c('Sample Name', 'Number of Mutations') # compatibility
+    if(!is.null(pv.out)) colnames(pout)[1:2] <- colnames(out)[1:2]
+  } else{
+    if(sum(is.na(rownames(out)))) 
+      rownames(out) <- out[,2]
+    out <- out[,-2, drop = FALSE]   # remove no. of mutation column
+    if(colnames(out)[2]=='Signature.1')  # v2
+      annot <- read.csv(system.file('extdata', 'msig_cBioPortal_v2.csv', package = 'tempoSig'))
+    else  # v3
+      annot <- read.csv(system.file('extdata', 'msig_cBioPortal_v3.csv', package = 'tempoSig'))
+    idx <- match(colnames(out)[-1], annot[,1])
+    out <- cbind(data.frame(
+            ENTITTY_STABLE_ID = paste('mutational_signature_contribution', annot[,1], sep='_'),
+            NAME = annot[,2], 
+            DESCRIPTION = annot$Description,
+            URL = annot$URL), t(as.matrix(out[,-1]))[idx,])
+    if(exists('pout')){
+      if(sum(is.na(rownames(pout)))) 
+        rownames(pout) <- pout[,2]
+      pout <- pout[,-2, drop = FALSE]   # remove no. of mutation column
+      pout <- cbind(data.frame(
+        ENTITTY_STABLE_ID = paste('mutational_signature_contribution', annot[,1], sep='_'),
+        NAME = annot[,2], 
+        DESCRIPTION = annot$Description,
+        URL = annot$URL), t(as.matrix(pout[,-1]))[idx,])
+    }
+  }
   
   write.table(out, file = output, sep = sep, row.names = F, quote = F)
   if(!is.null(pv.out)) write.table(pout, file = pv.out, sep = sep, row.names = F,
@@ -200,14 +267,13 @@ senspec <- function(xhat, x, pvalue = NULL, alpha = 0.05){
     if(!all(names(xhat)==names(pvalue))) stop('xhat and pvalue names mismatch')
   }
 
-  if(length(xhat) > length(x))
-    x <- vectorPad(x, xhat, value = 0)
-  else if(length(xhat) < length(x)){
-    xhat <- vectorPad(xhat, x, value = 0)
-    if(!is.null(pvalue)) 
-      pvalue <- vectorPad(pvalue, xhat, value = 1)
-  }
-  
+  sig <- union(names(xhat), names(x))
+  vsig <- rep(0, length(sig))
+  names(vsig) <- sig
+  x <- vectorPad(x, vsig, value=0)
+  xhat <- vectorPad(xhat, vsig, value=0)
+  if(!is.null(pvalue)) pvalue <- vectorPad(pvalue, vsig, value=1)
+
   bhat <- xhat > 0
   if(!is.null(pvalue))           # filter with pvalues for significant subset
     bhat <- bhat & (pvalue <= alpha)
