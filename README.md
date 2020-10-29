@@ -46,6 +46,8 @@ Each row is a vector of proportions that add up to 1.
 To estimate p-values of significance of each proportion, the signature profile of each reference signature (columns of **W**) are randomly shuffled by permutation to sample the null distribution. The exposure vectors inferred from these null samples are compared with the observed vector from the original data, with the p-value defined as the fraction of null samples whose proprotions are higher than the observed values.
 
 ## Installation
+
+### Install without docker
 Compilation requires GNU Scientific Library [(GSL)](https://www.gnu.org/software/gsl/). In Ubuntu Linux,
 
     $ sudo apt-get install libgsl-dev
@@ -59,6 +61,45 @@ Dependencies include [Rcpp](https://cran.r-project.org/package=Rcpp), [gtools](h
     > devtools::install_github("mskcc/tempoSig")
 
 will also install dependencies.
+
+### Install with docker
+Clone this repository,
+
+    $ git clone https://github.com/mskcc/tempoSig.git
+
+Go to the repository folder,
+
+    $ cd tempoSig
+
+Build the image,
+
+    $ docker build -t temposig .
+
+Use by the following command:
+
+`YOUR_CATALOG_FILE`: the absolute path of your catalog file \
+`YOUR_OUTPUT_FOLDER`: the absolute path of your folder that will save the output
+
+Create tempoSig program container:
+```bash
+docker run -it -d \
+--name tempoSig_container \
+-v <YOUR_CATALOG_FILE>:/tempoSig/input/catalog.txt \
+-v <YOUR_OUTPUT_FOLDER>:/tempoSig/output \
+temposig
+```
+
+Usage:
+```bash
+docker exec tempoSig_container \
+./exec/tempoSig.R input/catalog.txt
+```
+
+The other parameter can be added to the last line of this command. For example you can change your command to:
+```bash
+docker exec tempoSig_container \
+./exec/tempoSig.R input/catalog.txt output/exposure.txt --pvalue --nperm 1000
+```
 
 ## Quick start with command-line interface
 
