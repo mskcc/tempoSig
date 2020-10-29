@@ -160,7 +160,7 @@ writeExposure <- function(object, output, sep = '\t', rm.na = FALSE, pv.out = NU
       annot <- read.csv(system.file('extdata', 'msig_cBioPortal_v3.csv', package = 'tempoSig'))
     idx <- match(colnames(out)[-1], annot[,1])
     out <- cbind(data.frame(
-            ENTITTY_STABLE_ID = paste('mutational_signature_contribution', annot[,1], sep='_'),
+            ENTITY_STABLE_ID = paste('mutational_signature_contribution', annot[,1], sep='_'),
             NAME = annot[,2], 
             DESCRIPTION = annot$Description,
             URL = annot$URL), t(as.matrix(out[,-1]))[idx,])
@@ -169,7 +169,7 @@ writeExposure <- function(object, output, sep = '\t', rm.na = FALSE, pv.out = NU
         rownames(pout) <- pout[,2]
       pout <- pout[,-2, drop = FALSE]   # remove no. of mutation column
       pout <- cbind(data.frame(
-        ENTITTY_STABLE_ID = paste('mutational_signature_contribution', annot[,1], sep='_'),
+        ENTITY_STABLE_ID = paste('mutational_signature_pvalue', annot[,1], sep='_'),
         NAME = annot[,2], 
         DESCRIPTION = annot$Description,
         URL = annot$URL), t(as.matrix(pout[,-1]))[idx,])
