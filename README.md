@@ -78,7 +78,7 @@ Build the image,
 Use by the following command:
 
 `YOUR_CATALOG_FILE`: the absolute path of your catalog file \
-`YOUR_OUTPUT_FOLDER`: the absolute path of your folder that will save the output
+`YOUR_OUTPUT_FOLDER`: the absolute path of your folder where output will be saved
 
 Create tempoSig program container:
 ```bash
@@ -92,13 +92,13 @@ temposig
 Usage:
 ```bash
 docker exec tempoSig_container \
-./exec/tempoSig.R input/catalog.txt
+./exec/tempoSig.R input/catalog.txt output/exposure.txt
 ```
 
 The other parameter can be added to the last line of this command. For example you can change your command to:
 ```bash
 docker exec tempoSig_container \
-./exec/tempoSig.R input/catalog.txt output/exposure.txt --pvalue --nperm 1000
+./exec/tempoSig.R input/catalog.txt output/exposure.txt --pvalue --nperm 1000 --pv.out output/pvalue.txt
 ```
 
 ## Quick start with command-line interface
