@@ -1,5 +1,7 @@
 FROM continuumio/miniconda3:4.8.2
 
+LABEL authors="Gaofei Zhao"
+
 # Updates and install necessary packages
 RUN apt-get update
 RUN apt-get install -y libgsl-dev unzip
