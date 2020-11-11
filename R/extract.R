@@ -27,10 +27,12 @@
 #' @export
 extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb = 2,
                        compute.pval = FALSE, nperm = 1000, progress.bar = FALSE,
-                       pvtest = 'permutation', cosmic = TRUE, ...){
+                       pvtest = 'permutation', cosmic = FALSE, Kmin = 2,
+                       Kmax = 30, nrun =10, useC = TRUE, initializer = 'random', ...){
 
+  if(Kmax < 2 ) stop('Kmax must be at least 2')
   if(!is(object, 'tempoSig')) stop('object is not of class tempoSig')
-  if(!method %in% c('hnmf','mle','ard','mutcone')) stop('Unknown method')
+  if(!method %in% c('hnmf','bnmf','mle','ard','mutcone')) stop('Unknown method')
   if(method != 'mle' & pvtest == 'lrt') stop('Likelihood ratio test is possible only with MLE')
   if(method == 'mutcone' & compute.pval) stop('P-value in mutcone not implemented')
 
@@ -45,19 +47,44 @@ extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb
     stop('Mutation types in spectrum do not match reference.')
   spectrum <- spectrum[idx, , drop = FALSE]  # rearrange rows to match reference
   
-  if(method %in% c('hnmf','ard')){
-    # if(randomize) mat <- apply(mat0,2, function(x){sample(x,size=length(x),replace=FALSE)})    
+  if(method %in% c('hnmf','bnmf','ard')){   
     if(compute.pval) cat('Computing exposures ...\n',sep='')
     if(method=='ard'){ 
       K <- length(nt)
       signat <- NULL
     }
-    else{ 
+    else if(method=='hnmf'){ 
       K <- NULL
       signat <- ref
     }
-    nmf <- nmf(catalog = spectrum, denovo = (method=='ard'), signat = signat, K = K,
-               ard = (method=='ard'), progress.bar = progress.bar, ...)
+    if(method %in% c('ard','hnmf'))
+      nmf <- nmf(catalog = spectrum, denovo = (method=='ard'), signat = signat, K = K,
+               ard = (method=='ard'), progress.bar = progress.bar, nrun = nrun, ...)
+    else{ # bnmf
+      sig <- colnames(signat(object))
+      object <- bnmf(object, ranks=seq(Kmin,Kmax), nrun = nrun, useC = useC, 
+                     initializer = initializer, ...)
+      W <- signat(object)
+      H <- expos(object)
+      if(cosmic){
+        if(NCOL(W) > NCOL(ref)) 
+          warning('K larger than ref signature size. cosmic assignment skipped')
+        else{
+          cosine <- cosineSimilarity(A = W, B = ref, diag = FALSE)
+          lsap <- clue::solve_LSAP(cosine, maximum = TRUE)
+          sbs <- colnames(cosine)[lsap]
+          misc(object) <- list(cosine = cosine)
+        }
+        colnames(W) <- rownames(H) <- paste0('S',seq(NCOL(W)),':',sbs)
+      } else if(initializer=='restart')
+        colnames(W) <- rownames(H) <- sig
+      else
+        colnames(W) <- rownames(H) <- paste0('S',seq(NCOL(W)))
+      signat(object) <- W
+      expos(object) <- H
+      return(object)
+    }
+    
     H <- t(nmf$H)
     if(method == 'ard'){
       W <- nmf$W

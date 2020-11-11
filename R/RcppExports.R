@@ -5,3 +5,7 @@ mlestimate <- function(D, x0, ref, Itmax, Tol) {
     .Call('_tempoSig_mlestimate', PACKAGE = 'tempoSig', D, x0, ref, Itmax, Tol)
 }
 
+vbnmf_update <- function(X, wh, hyper, fudge) {
+    .Call('_tempoSig_vbnmf_update', PACKAGE = 'tempoSig', X, wh, hyper, fudge)
+}
+

@@ -19,7 +19,7 @@
 #' @export
 nmf <- function(catalog, denovo = FALSE, signat = NULL, K = NULL, nrun = 10, ard = FALSE,
                    verbose = FALSE, progress.bar = FALSE, Itmax = 100000, Tol = 1e-4,
-                   a = 10, nprint = 100){
+                   a = 10, nprint = 100, penalizer='l2'){
   
   mat <- catalog
   if(!is.matrix(mat)) mat <- as.matrix(catalog)
@@ -27,6 +27,8 @@ nmf <- function(catalog, denovo = FALSE, signat = NULL, K = NULL, nrun = 10, ard
   nullc <- sum(Matrix::colSums(mat)==0)
   if(nullr>0 & denovo) stop('Input matrix contains empty rows')
   if(nullc>0) stop('Input matrix contains empty columns')
+  
+  if(!penalizer %in% c('l1','l2')) stop('Unknown penalizer')
   
   nrow <- dim(mat)[1]
   ncol <- dim(mat)[2]
@@ -39,10 +41,18 @@ nmf <- function(catalog, denovo = FALSE, signat = NULL, K = NULL, nrun = 10, ard
   }
   rank <- K
   
-  cc = nrow + ncol + a + 1  # ARD hyperparameters
-  muv <- mean(mat)
-  b = sqrt((a - 1)*(a - 2)*muv / K)
-  
+  if(ard){
+    muv <- mean(mat)
+    if(penalizer=='l1'){
+      cc = nrow + ncol + a + 1  # ARD hyperparameters
+      b = sqrt((a - 1)*(a - 2)*muv / K)
+    }
+    else{
+      cc = (nrow + ncol)/2 + a + 1
+      b = pi*(a - 1)*muv / (2*K)
+    }
+  }
+
   if(verbose) progress.bar <- FALSE  # can't show messages within progress.bar
   
   if(progress.bar) pb <- txtProgressBar(style = 3)
@@ -59,11 +69,20 @@ nmf <- function(catalog, denovo = FALSE, signat = NULL, K = NULL, nrun = 10, ard
     for(it in seq_len(Itmax)){
       if(ard){ 
         if(it > 1) lambda0 <- lambda
-        lambda <- (colSums(wh$ew) + rowSums(wh$eh) + b) / cc
+        if(penalizer=='l1')
+          lambda <- (colSums(wh$ew) + rowSums(wh$eh) + b) / cc
+        else
+          lambda <- ((colSums(wh$ew^2) + rowSums(wh$eh)^2) / 2.0 + b) / cc
       } else lambda <- NULL
-      wh <- nmf_updateR(mat, wh$ew, wh$eh, nrow, ncol, rank, denovo = denovo, ard = ard, lambda)
+      wh <- nmf_updateR(mat, wh$ew, wh$eh, nrow, ncol, rank, denovo = denovo, ard = ard, 
+                        lambda = lambda, penalizer = penalizer)
       lk0 <- likelihood(mat, wh$ew, wh$eh)
-      if(ard) lk0 <- lk0 - sum((colSums(wh$ew) + rowSums(wh$eh) + b + cc*log(lambda))/lambda)
+      if(ard){
+        if(penalizer=='l1')
+          lk0 <- lk0 - sum((colSums(wh$ew) + rowSums(wh$eh) + b) / lambda + cc*log(lambda))
+        else
+          lk0 <- lk0 - sum(((colSums(wh$ew^2) + rowSums(wh$eh^2)) / 2.0 + b) / lambda + cc*log(lambda))
+      }
       if(it > 1){
         if(ard){ 
           tol <- max(abs((lambda - lambda0)/lambda0))
@@ -115,7 +134,8 @@ nmf <- function(catalog, denovo = FALSE, signat = NULL, K = NULL, nrun = 10, ard
 }
 
 # single update step of NMF
-nmf_updateR <- function(x, w, h, n, m, r, denovo = TRUE, ard = FALSE, lambda = NULL){
+nmf_updateR <- function(x, w, h, n, m, r, denovo = TRUE, ard = FALSE, lambda = NULL,
+                        penalizer = 'l2'){
   
   x <- as.matrix(x)
   w <- as.matrix(w)
@@ -123,7 +143,12 @@ nmf_updateR <- function(x, w, h, n, m, r, denovo = TRUE, ard = FALSE, lambda = N
   
   up <- h*(t(w) %*% (x/(w %*% h)))
   wi <- colSums(w)
-  if(ard) wi <- wi + 1.0 / lambda
+  if(ard){ 
+    if(penalizer=='l1')
+      wi <- wi + 1.0 / lambda
+    else
+      wi <- wi + colSums(w) / lambda
+  }
   down <- matrix(rep(wi, m), nrow = r, ncol = m, byrow = FALSE)
   
   h <- up / down
@@ -132,7 +157,12 @@ nmf_updateR <- function(x, w, h, n, m, r, denovo = TRUE, ard = FALSE, lambda = N
   if(denovo){
     up <- w*((x / (w %*% h)) %*% t(h))
     hj <- rowSums(h)
-    if(ard) hj <- hj + 1.0 / lambda
+    if(ard){ 
+      if(penalizer=='l1')
+        hj <- hj + 1.0 / lambda
+      else
+        hj <- hj + rowSums(h) / lambda
+    }
     down <- matrix(rep(hj, n), nrow = n, ncol = r, byrow = TRUE)
     w <- up / down
     w[w < .Machine$double.eps] <- .Machine$double.eps

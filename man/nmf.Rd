@@ -16,7 +16,8 @@ nmf(
   Itmax = 1e+05,
   Tol = 1e-04,
   a = 10,
-  nprint = 100
+  nprint = 100,
+  penalizer = "l2"
 )
 }
 \arguments{

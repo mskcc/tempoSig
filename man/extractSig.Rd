@@ -14,7 +14,11 @@ extractSig(
   nperm = 1000,
   progress.bar = FALSE,
   pvtest = "permutation",
-  cosmic = TRUE,
+  cosmic = FALSE,
+  Kmin = 2,
+  Kmax = 30,
+  nrun = 10,
+  useC = TRUE,
   ...
 )
 }

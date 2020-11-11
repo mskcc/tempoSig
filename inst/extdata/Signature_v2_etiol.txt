@@ -1,0 +1,31 @@
+Signature	Etiology
+Signature.1	Aging
+Signature.2	APOBEC
+Signature.3	HRD
+Signature.4	Smoking
+Signature.5	 	
+Signature.6	MMR
+Signature.7	UV
+Signature.8	 
+Signature.9	Pol-eta
+Signature.10	POLE
+Signature.11	TMZ
+Signature.12	 
+Signature.13	APOBEC
+Signature.14	MMR
+Signature.15	MMR
+Signature.16	 
+Signature.17	 
+Signature.18	 
+Signature.19	 
+Signature.20	MMR
+Signature.21	MMR
+Signature.22	AA
+Signature.23	 
+Signature.24	Aflatoxin
+Signature.25	 
+Signature.26	MMR
+Signature.27	 
+Signature.28	 
+Signature.29	Tobacco
+Signature.30	 
