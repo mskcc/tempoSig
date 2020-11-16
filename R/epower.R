@@ -11,18 +11,23 @@
 #' @param Pmin Lower bound for power 
 #' @export
 #' 
-powerEstimate <- function(proportion , reference = 'SA', use.model = TRUE, nsamp = 100, 
-                          Msamp = NULL, verbose = TRUE, alpha = 0.05, Pmin = 0.8){
+powerEstimate <- function(proportion , reference = 'v2', use.model = TRUE, nsamp = 100, 
+                          Msamp = NULL, verbose = TRUE, alpha = 0.05, Pmin = 0.8, ...){
   
   proportion <- proportion[proportion > 0]
   if(sum(proportion)!=1.0) proportion <- proportion / sum(proportion) # normalize if not
   
 # Read reference signatures
-  if(reference == 'SA')
-    ref = read.table(system.file('extdata', 'cosmic_SigAnalyzer_SBS_signatures.txt', 
+  if(!reference %in% c('v2','SA')) stop('Reference other than v2 or SA not implemented')
+  else if(reference=='SA')
+    ref <- read.table(system.file('extdata', 'cosmic_SigAnalyzer_SBS_signatures.txt', 
                                  package = 'tempoSig'), header = TRUE, sep = '\t')
-  else stop('Reference other than SA not implemented')
+  else
+    ref <- read.table(system.file('extdata', 'cosmic_snv_signatures_v2.txt', package ='tempoSig'),
+                      header = TRUE, sep = '\t')
+  
   sbs <- colnames(ref)
+  if(reference=='v2') sbs <- colnames(ref) <- gsub('nature','',sbs)
   nsbs <- length(sbs)
   if(sum(is.na(names(proportion))) > 0){
     if(length(proportion) != nsbs) stop('Input proportion inconsistent with reference')
@@ -31,19 +36,24 @@ powerEstimate <- function(proportion , reference = 'SA', use.model = TRUE, nsamp
   else if(sum(!(names(proportion) %in% sbs)) > 0)
     stop('Input proportion inconsistent with reference')
 
-  mf <- read.table(system.file('extdata', 'Mcoeff.txt', package = 'tempoSig'), 
-                   header = TRUE, sep = '\t')
+  if(reference=='v2')
+    mf <- read.table(system.file('extdata', 'Mcoeff_v2.txt', package = 'tempoSig'), header = TRUE, sep = '\t')
+  else
+    mf <- read.table(system.file('extdata', 'Mcoeff.txt', package = 'tempoSig'), header = TRUE, sep = '\t')
   etiol <- mf[,3]
   names(etiol) <- mf[,1]
     
   if(use.model){
   # Read parameter sets
-    afit <- read.table(system.file('extdata', 'Acoeff.txt', package = 'tempoSig'), 
-                       header = TRUE, sep = '\t')
-    bfit <- read.table(system.file('extdata', 'Bcoeff.txt', package = 'tempoSig'), 
-                       header = TRUE, sep = '\t')
-    fmin <- read.table(system.file('extdata', 'Fmin.txt', package = 'tempoSig'), 
-                       header = TRUE, sep = '\t')
+    if(reference=='v2'){
+      afit <- read.table(system.file('extdata', 'Acoeff_v2.txt', package = 'tempoSig'), header = TRUE, sep = '\t')
+      bfit <- read.table(system.file('extdata', 'Bcoeff_v2.txt', package = 'tempoSig'), header = TRUE, sep = '\t')
+    } else{
+      afit <- read.table(system.file('extdata', 'Acoeff.txt', package = 'tempoSig'), header = TRUE, sep = '\t')
+      bfit <- read.table(system.file('extdata', 'Bcoeff.txt', package = 'tempoSig'), header = TRUE, sep = '\t')
+#    fmin <- read.table(system.file('extdata', 'Fmin.txt', package = 'tempoSig'), 
+#                       header = TRUE, sep = '\t')
+    }
     mf1 <- mf[,2]
     names(mf1) <- mf[,1]
   
@@ -52,17 +62,21 @@ powerEstimate <- function(proportion , reference = 'SA', use.model = TRUE, nsamp
       sbs <- names(pr)[i]
       fb <- 1 - proportion[i]
       pb <- proportion[-i]/fb  # background proportion
-      a <- sum(afit[sbs, names(pb)]*pb)
-      b <- sum(bfit[sbs, names(pb)]*pb)
-#     fm <- max(fmin[sbs, names(pb)])
-      fm <- exp(sum(pb*log(fmin[sbs, names(pb)])))
-      frq <- proportion[i]
-      if(frq < fm) mpr <- Inf
+      if(length(pb)==0)
+        mpr <- mf1[sbs]
       else{
+        a <- sum(afit[sbs, names(pb)]*pb)
+        b <- sum(bfit[sbs, names(pb)]*pb)
+#       fm <- max(fmin[sbs, names(pb)])
+#       fm <- exp(sum(pb*log(fmin[sbs, names(pb)])))
+        frq <- proportion[i]
+#       if(frq < fm) mpr <- Inf
+#       else{
         lp <- log10(frq)
         logm <- log10(mf1[sbs]) - a*lp + b*lp^2
         mpr <- 10^logm
       }
+#     }
       pr[i] <- round(mpr)
     }
     dat <- data.frame(Proportion = proportion, M80 = pr, Etiology = etiol[names(pr)])
@@ -87,7 +101,7 @@ powerEstimate <- function(proportion , reference = 'SA', use.model = TRUE, nsamp
       rownames(xcat) <- nt
       colnames(xcat) <- seq(nsamp)
       ts <- tempoSig(data = xcat, signat=ref)
-      ts <- extractSig(ts, compute.pval = TRUE, progress.bar = verbose)
+      ts <- extractSig(ts, compute.pval = TRUE, progress.bar = verbose, ...)
       ex <- expos(ts)
       pv <- pvalue(ts)
       tp <- rep(0, length(proportion))
