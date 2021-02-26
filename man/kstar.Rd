@@ -4,7 +4,7 @@
 \alias{kstar}
 \title{Determine optimal rank}
 \usage{
-kstar(object, df = 10, BF.threshold = 3, type = NULL, m = 96)
+kstar(object, df = NULL, BF.threshold = 3, type = 1, m = 96)
 }
 \arguments{
 \item{object}{\code{scNMFSet} object containing factorization output, or 

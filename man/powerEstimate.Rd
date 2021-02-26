@@ -6,13 +6,17 @@
 \usage{
 powerEstimate(
   proportion,
-  reference = "SA",
+  reference = "v2",
   use.model = TRUE,
   nsamp = 100,
+  Mcoeff = NULL,
+  afit = NULL,
+  bfit = NULL,
   Msamp = NULL,
   verbose = TRUE,
   alpha = 0.05,
-  Pmin = 0.8
+  Pmin = 0.8,
+  ...
 )
 }
 \arguments{

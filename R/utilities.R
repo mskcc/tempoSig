@@ -156,8 +156,11 @@ writeExposure <- function(object, output, sep = '\t', rm.na = FALSE, pv.out = NU
     out <- out[,-2, drop = FALSE]   # remove no. of mutation column
     if(colnames(out)[2]=='Signature.1')  # v2
       annot <- read.csv(system.file('extdata', 'msig_cBioPortal_v2.csv', package = 'tempoSig'))
-    else  # v3
+    else if(colnames(out)[2]=='SBS1')  # v3
       annot <- read.csv(system.file('extdata', 'msig_cBioPortal_v3.csv', package = 'tempoSig'))
+    else
+      stop('cBioFormat not compatible with custom reference')
+    
     idx <- match(colnames(out)[-1], annot[,1])
     out <- cbind(data.frame(
             ENTITTY_STABLE_ID = paste('mutational_signature_contribution', annot[,1], sep='_'),

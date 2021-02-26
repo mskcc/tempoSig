@@ -11,7 +11,8 @@
 #' @param Pmin Lower bound for power 
 #' @export
 #' 
-powerEstimate <- function(proportion , reference = 'v2', use.model = TRUE, nsamp = 100, 
+powerEstimate <- function(proportion , reference = 'v2', use.model = TRUE, nsamp = 100,
+                          Mcoeff = NULL, afit = NULL, bfit = NULL,
                           Msamp = NULL, verbose = TRUE, alpha = 0.05, Pmin = 0.8, ...){
   
   proportion <- proportion[proportion > 0]
@@ -36,28 +37,35 @@ powerEstimate <- function(proportion , reference = 'v2', use.model = TRUE, nsamp
   else if(sum(!(names(proportion) %in% sbs)) > 0)
     stop('Input proportion inconsistent with reference')
 
-  if(reference=='v2')
-    mf <- read.table(system.file('extdata', 'Mcoeff_v2.txt', package = 'tempoSig'), header = TRUE, sep = '\t')
-  else
-    mf <- read.table(system.file('extdata', 'Mcoeff.txt', package = 'tempoSig'), header = TRUE, sep = '\t')
+  if(is.null(Mcoeff)){
+    if(reference=='v2')
+      mf <- read.table(system.file('extdata', 'Mcoeff_v2.txt', package = 'tempoSig'), header = TRUE, sep = '\t')
+    else
+      mf <- read.table(system.file('extdata', 'Mcoeff.txt', package = 'tempoSig'), header = TRUE, sep = '\t')
+  } else mf <- Mcoeff
+  
   etiol <- mf[,3]
   names(etiol) <- mf[,1]
     
   if(use.model){
   # Read parameter sets
     if(reference=='v2'){
-      afit <- read.table(system.file('extdata', 'Acoeff_v2.txt', package = 'tempoSig'), header = TRUE, sep = '\t')
-      bfit <- read.table(system.file('extdata', 'Bcoeff_v2.txt', package = 'tempoSig'), header = TRUE, sep = '\t')
+      if(is.null(afit)) afit <- read.table(system.file('extdata', 'Acoeff_v2.txt', package = 'tempoSig'), header = TRUE, sep = '\t')
+      if(is.null(bfit)) bfit <- read.table(system.file('extdata', 'Bcoeff_v2.txt', package = 'tempoSig'), header = TRUE, sep = '\t')
     } else{
-      afit <- read.table(system.file('extdata', 'Acoeff.txt', package = 'tempoSig'), header = TRUE, sep = '\t')
-      bfit <- read.table(system.file('extdata', 'Bcoeff.txt', package = 'tempoSig'), header = TRUE, sep = '\t')
+      if(is.null(afit)) afit <- read.table(system.file('extdata', 'Acoeff.txt', package = 'tempoSig'), header = TRUE, sep = '\t')
+      if(is.null(bfit)) bfit <- read.table(system.file('extdata', 'Bcoeff.txt', package = 'tempoSig'), header = TRUE, sep = '\t')
 #    fmin <- read.table(system.file('extdata', 'Fmin.txt', package = 'tempoSig'), 
 #                       header = TRUE, sep = '\t')
     }
+    nsig <- length(sbs)
+    if(nrow(afit)!=nsig | ncol(afit) != nsig | nrow(bfit)!=nsig | ncol(bfit)!=nsig)
+      stop('afit/bfit dimension does not match signatures list')
+    
     mf1 <- mf[,2]
     names(mf1) <- mf[,1]
   
-    pr <- proportion   # predicted M80
+    pr <- proportion   # predicted Mp
     for(i in seq_along(proportion)){
       sbs <- names(pr)[i]
       fb <- 1 - proportion[i]
@@ -77,9 +85,9 @@ powerEstimate <- function(proportion , reference = 'v2', use.model = TRUE, nsamp
         mpr <- 10^logm
       }
 #     }
-      pr[i] <- round(mpr)
+      pr[i] <- max(1,round(mpr))
     }
-    dat <- data.frame(Proportion = proportion, M80 = pr, Etiology = etiol[names(pr)])
+    dat <- data.frame(Proportion = proportion, Mp = pr, Etiology = etiol[names(pr)])
   } else{   # simulation
     if(is.null(Msamp)) Msamp <- c(outer(c(2, 5, 10), 10^seq(0,6), '*'))
     nt <- rownames(ref)
@@ -115,7 +123,7 @@ powerEstimate <- function(proportion , reference = 'v2', use.model = TRUE, nsamp
       if(iM==1) dpw <- pw
       else dpw <- rbind(dpw, pw)
     }
-    pr <- proportion   # predicted M80
+    pr <- proportion   # predicted Mp
     for(i in seq_along(dpw[, -1])){
       pw <- dpw[, i+1]
       if(max(pw) < Pmin) mpr <- Inf
@@ -128,7 +136,7 @@ powerEstimate <- function(proportion , reference = 'v2', use.model = TRUE, nsamp
       }
       pr[i] <- round(mpr)
     }
-    dat <- list(Mpr = data.frame(Proportion = proportion, M80 = pr, 
+    dat <- list(Mpr = data.frame(Proportion = proportion, Mp = pr, 
                                  Etiology = etiol[names(pr)]), pcurve = dpw)
   }
   return(dat)

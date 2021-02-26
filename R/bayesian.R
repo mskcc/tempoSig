@@ -242,17 +242,18 @@ bnmf <- function(object, ranks=2:10, nrun=1, verbose=2,
      basis[[k]] <- w
      coeff[[k]] <- h
 
-     if(initializer!='restart'){
+#     if(initializer!='restart'){
        rownames(basis[[k]]) <- rownames(mat)
        colnames(coeff[[k]]) <- colnames(mat)
-     }
+#     }
    }
    
    if(kstar=='kmax') Kstar <- max(which(is.finite(rdat)))
    else if(kstar=='kopt') Kstar <- which.max(rdat)
    
    signat(object) <- basis[[Kstar]]
-   expos(object) <- coeff[[Kstar]]
+   H <- coeff[[Kstar]]
+   expos(object) <- t(t(H)/colSums(H))
    misc(object)[['measure']] <- data.frame(rank=ranks2, lml=rdat)
 
    return(object)

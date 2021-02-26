@@ -118,6 +118,14 @@ setMethod('catalog', signature = 'tempoSig',
           }
 )
 #' @export
+setGeneric('catalog<-', function(object, value) standardGeneric('catalog<-'))
+#' @export
+setMethod('catalog<-', signature = 'tempoSig',
+          function(object, value){
+            object@catalog <- as.matrix(value)
+            if(validObject(object)) return(object)
+          })
+#' @export
 setGeneric('signat', function(object) standardGeneric('signat'))
 #' Accessor for signature
 #'
@@ -134,7 +142,7 @@ setGeneric('signat<-', function(object, value) standardGeneric('signat<-'))
 #' @export
 setMethod('signat<-', signature = 'tempoSig',
           function(object, value){
-            object@signat <- value
+            object@signat <- as.matrix(value)
             if(validObject(object)) return(object)
           })
 #' @export
@@ -174,7 +182,7 @@ setGeneric('expos<-', function(object, value) standardGeneric('expos<-'))
 #' @export
 setMethod('expos<-', signature = 'tempoSig',
           function(object, value){
-            object@expos <- value
+            object@expos <- as.matrix(value)
             if(validObject(object)) return(object)
 })
 #' @export
@@ -194,7 +202,7 @@ setGeneric('pvalue<-', function(object, value) standardGeneric('pvalue<-'))
 #' @export
 setMethod('pvalue<-', signature = 'tempoSig',
           function(object, value){
-            object@pvalue <- value
+            object@pvalue <- as.matrix(value)
             if(validObject(object)) return(object)
           })
 #' Accessor for logLik

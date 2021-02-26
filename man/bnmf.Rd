@@ -23,7 +23,8 @@ bnmf(
   fudge = NULL,
   kstar = "kmax",
   useC = FALSE,
-  unif.stop = TRUE
+  unif.stop = TRUE,
+  sindex = NULL
 )
 }
 \arguments{

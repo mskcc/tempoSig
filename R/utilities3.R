@@ -18,9 +18,9 @@
 #' @examples
 #' set.seed(1)
 #' @export
-kstar <- function(object, df=10, BF.threshold=3, type=1, m = 96){
+kstar <- function(object, df=NULL, BF.threshold=3, type=1, m = 96){
   
-  if(is(object,'tempSig')){
+  if(is(object,'tempoSig')){
     me <- misc(object)$measure[,c(1,2)]
     m <- nrow(catalog(object))
   }
@@ -30,6 +30,7 @@ kstar <- function(object, df=10, BF.threshold=3, type=1, m = 96){
   }
   else stop('Inappropriate class of object')
   
+  if(is.null(df)) df <- nrow(me)
   df <- min(df,nrow(me))
   fs <- stats::smooth.spline(x=me[,1],y=me[,2],df=df)
   rst <- fs$x[which.max(fs$y)]     # arg max_r (L)
@@ -53,7 +54,7 @@ kstar <- function(object, df=10, BF.threshold=3, type=1, m = 96){
     ropt <- fs$x[idx]
   }
   
-  return(list(type=type, ropt=ropt))
+  return(list(type=type, ropt=ropt, spline=fs))
 }
 
 slope <- function(y,x){
@@ -71,10 +72,10 @@ slope <- function(y,x){
 #' Plot signature profile
 #' 
 #' @param x Signature profile vector; must be of length 96 and named for nucleotide contexts
-#' @param ... Other parameters for \code{plot}
+#' @param lwd Line thickness for error bars
 #' @return Return vector of \code{barplot}
 #' @export
-sigplot <- function(x, ...){
+sigplot <- function(x, error = NULL, lwd = 0.5){
   
   nt <- trinucleotides()
   if(sum(is.na(names(x))) > 0 | sum(!names(x) %in% nt) > 0) 
@@ -85,12 +86,19 @@ sigplot <- function(x, ...){
   
   x <- as.matrix(x)
   nt <- trinucleotides()
-  xt <- barplot(c(x),col=col,names.arg=rep('',96),xaxt='n',las=1,lwd=0.5)
+  if(is.null(error)) ylim <- c(0, max(c(x)))
+  else ylim <- c(0, max(c(x) + c(error)))
+  xt <- barplot(c(x),col=col,names.arg=rep('',96),xaxt='n',las=1,lwd=0.5, ylim=ylim)
+  if(!is.null(error)){
+    dx <- xt[2] - xt[1]
+    segments(x0=xt, x1=xt, y0=c(x), y1=c(x) + c(error), col=col, lwd=lwd)
+    segments(x0=xt-dx/3, x1=xt+dx/3, y0=c(x) + c(error), y1=c(x) + c(error), col=col, lwd=lwd)
+  }
   ymax <- max(x)
   rect(xleft=xt[-96],xright=xt[-1],ytop=0,ybottom=-ymax*0.02,col=col,xpd=NA,lwd=0)
   axis(side=1,at=xt[seq(8,88,length.out=6)],label=c('C>A','C>G','C>T','T>A','T>C','T>G'),
        mgp=c(2,0.3,0),tck=0,lwd=0)
   title(main=colnames(x),cex.main=1.0)
-  return(xt)
+  return(invisible(xt))
 }
 

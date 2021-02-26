@@ -19,6 +19,7 @@ extractSig(
   Kmax = 30,
   nrun = 10,
   useC = TRUE,
+  initializer = "random",
   ...
 )
 }

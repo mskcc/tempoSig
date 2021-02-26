@@ -4,12 +4,12 @@
 \alias{sigplot}
 \title{Plot signature profile}
 \usage{
-sigplot(x, ...)
+sigplot(x, error = NULL, lwd = 0.5)
 }
 \arguments{
 \item{x}{Signature profile vector; must be of length 96 and named for nucleotide contexts}
 
-\item{...}{Other parameters for \code{plot}}
+\item{lwd}{Line thickness for error bars}
 }
 \value{
 Return vector of \code{barplot}
