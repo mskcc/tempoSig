@@ -68,7 +68,7 @@ tempoSig <- function(data, signat = 'v2'){
     }
   }
   
-  signat <- signat / colSums(signat) # renormalize just in case (also to remove truncation errors)
+  signat <- t(t(signat) / colSums(signat)) # renormalize just in case (also to remove truncation errors)
   if(!all(abs(colSums(signat) - 1) < 1e-4)) stop('Signature list not normalized')
   nts <- rownames(signat)
   ntd <- rownames(data)
