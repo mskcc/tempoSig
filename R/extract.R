@@ -27,19 +27,21 @@
 #' @export
 extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb = 2,
                        compute.pval = FALSE, nperm = 1000, progress.bar = FALSE,
-                       pvtest = 'permutation', cosmic = FALSE, Kmin = 2,
+                       pvtest = 'permutation', cosmic = FALSE, Kmin = 2, K = 2, 
                        Kmax = 30, nrun =10, useC = TRUE, initializer = 'random', ...){
 
   if(Kmax < 2 ) stop('Kmax must be at least 2')
   if(!is(object, 'tempoSig')) stop('object is not of class tempoSig')
-  if(!method %in% c('hnmf','bnmf','mle','ard','mutcone')) stop('Unknown method')
+  if(!method %in% c('nmf','hnmf','bnmf','mle','mutcone')) stop('Unknown method')
   if(method != 'mle' & pvtest == 'lrt') stop('Likelihood ratio test is possible only with MLE')
   if(method == 'mutcone' & compute.pval) stop('P-value in mutcone not implemented')
 
   spectrum <- catalog(object)
   ref <- signat(object)
+  nref <- NCOL(ref)
   mut.load <- tmb(object)
-
+  nsample <- length(tmb(object))
+  
   nt <- rownames(ref)
   nnt <- length(nt)
   idx <- match(nt, rownames(spectrum))
@@ -47,36 +49,22 @@ extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb
     stop('Mutation types in spectrum do not match reference.')
   spectrum <- spectrum[idx, , drop = FALSE]  # rearrange rows to match reference
   
-  if(method %in% c('hnmf','bnmf','ard')){   
+  if(method %in% c('nmf','hnmf','bnmf')){
     if(compute.pval) cat('Computing exposures ...\n',sep='')
-    if(method=='ard'){ 
-      K <- length(nt)
-      signat <- NULL
-    }
-    else if(method=='hnmf'){ 
+    if(method=='hnmf'){ 
       K <- NULL
-      signat <- ref
-    }
-    if(method %in% c('ard','hnmf'))
-      nmf <- nmf(catalog = spectrum, denovo = (method=='ard'), signat = signat, K = K,
-               ard = (method=='ard'), progress.bar = progress.bar, nrun = nrun, ...)
+      sigs <- ref
+    } else if(method=='nmf') sigs <- NULL
+    if(method %in% c('nmf','hnmf'))
+      nmf <- nmf(catalog = spectrum, denovo = (method=='nmf'), sig = sigs, K = K,
+               progress.bar = progress.bar, nrun = nrun, useC = useC, ...)
     else{ # bnmf
       sig <- colnames(signat(object))
       object <- bnmf(object, ranks=seq(Kmin,Kmax), nrun = nrun, useC = useC, 
                      initializer = initializer, ...)
       W <- signat(object)
       H <- expos(object)
-      if(cosmic){
-        if(NCOL(W) > NCOL(ref)) 
-          warning('K larger than ref signature size. cosmic assignment skipped')
-        else{
-          cosine <- cosineSimilarity(A = W, B = ref, diag = FALSE)
-          lsap <- clue::solve_LSAP(cosine, maximum = TRUE)
-          sbs <- colnames(cosine)[lsap]
-          misc(object) <- list(cosine = cosine)
-        }
-        colnames(W) <- rownames(H) <- paste0('S',seq(NCOL(W)),':',sbs)
-      } else if(initializer=='restart')
+      if(initializer=='restart')
         colnames(W) <- rownames(H) <- sig
       else
         colnames(W) <- rownames(H) <- paste0('S',seq(NCOL(W)))
@@ -86,41 +74,50 @@ extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb
     }
     
     H <- t(nmf$H)
-    if(method == 'ard'){
+    if(method != 'hnmf'){ 
       W <- nmf$W
-      if(cosmic){
-        cosine <- cosineSimilarity(A = W, B = ref, diag = FALSE)
-        lsap <- clue::solve_LSAP(cosine, maximum = TRUE)
-        sbs <- colnames(cosine)[lsap]
-        colnames(W) <- colnames(H) <- sbs
-        misc(object) <- list(cosine = cosine)
-      }
+#     if(cosmic){
+#       cosine <- cosineSimilarity(A = W, B = ref, diag = FALSE)
+#       lsap <- clue::solve_LSAP(cosine, maximum = TRUE)
+#       sbs <- colnames(cosine)[lsap]
+#       colnames(W) <- colnames(H) <- sbs
+#       misc(object) <- list(cosine = cosine)
+#     }
       signat(object) <- W
     }
     expos(object) <- H
     logLik(object) <- nmf$logLik
-    if(compute.pval & method!='ard'){   # estimate p-values by permutation resampling
+    if(compute.pval & method == 'hnmf'){   # estimate p-values by permutation resampling
       cat('Estimating p-values ...\n',sep='')
       if(progress.bar) pb <- txtProgressBar(style = 3)
-      for(k in seq(nperm)){
-        spec <- apply(spectrum, 2, function(x){sample(x, size = length(x), replace = FALSE)})
-        rownames(spec) <- rownames(spectrum)
-        nmf <- nmf(catalog = spec, denovo = FALSE, signat = ref, ard = FALSE, 
-                   progress.bar = FALSE, nrun = 1, ...)
-        tmp <- t(nmf$H) >= H
-        if(k == 1) perm <- tmp
-        else perm <- perm + tmp
-        setTxtProgressBar(pb, k/nperm)
+      pv <- matrix(0, nrow = nsample, ncol = nref)
+      rownames(pv) <- colnames(spectrum)
+      colnames(pv) <- colnames(ref)
+      for(l in seq(nperm)){
+        if(pvtest == 'x.permutation'){
+          spec <- apply(spectrum, 2, function(x){sample(x, size = length(x), replace = FALSE)})
+          rownames(spec) <- rownames(spectrum)
+          nmf <- nmf(catalog = spec, denovo = FALSE, sig = ref, progress.bar = FALSE, 
+                   nrun = 1, verbose = FALSE, ...)
+          pv <- pv + (t(nmf$H) >= H)
+        } else if(pvtest == 'permutation'){
+          rref <- ref
+          for(k in seq(nref)){
+            rref[, k] <- rref[sample(nnt),k]
+            names(rref[,k]) <- nt
+            nmf <- nmf(catalog = spectrum, denovo = FALSE, sig = rref, progress.bar = FALSE, 
+                       nrun = 1, verbose = FALSE, ...)
+            pv[, k] <- pv[, k] + (t(nmf$H)[, k] >= H[, k])
+          }
+        }
+        if(progress.bar) setTxtProgressBar(pb, l/nperm)
       }
-      perm <- perm / nperm
-      pvalue(object) <- perm
+      pvalue(object) <- pv/nperm
       if(progress.bar) close(pb)
     }
     return(object)
   }
   
-  nsample <- length(tmb(object))
-  nref <- NCOL(ref)
   h <- matrix(0, nrow = nsample, ncol = nref)
   signatures <- colnames(ref)
   colnames(h) <- signatures

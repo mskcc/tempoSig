@@ -1,14 +1,15 @@
 Package: tempoSig
 Type: Package
-Title: Maximum Likelihood Fitting of Mutational Catalog to Signatures
-Version: 0.4.2
+Title: Maximum Likelihood Fitting of Mutational Catalogs and De Novo Inference of Signatures
+Version: 0.5.0
 Author: Jun Woo
 Maintainer: Jun Woo <wooh@mskcc.org>
 Depends: R (>= 3.6.0)
 Imports: gtools, Rcpp (>= 0.12.16), utils, argparse, coneproj, data.table, RcppEigen
-Description: Infers mutation signature exposures from mutation catalog data and
-    known signature list. Also includes associated utility functions for significance 
-    tests and confidence intervals.
+Description: Infers mutation signature exposures from mutation catalog data using
+    known signature list (refitting) or via de novo extraction. With de novo extraction,
+    the most likely number of signatures is estmated in Bayesian NMF.
+    Also includes associated utility functions for significance tests in refitting.
 License: GPL (>= 2)
 LinkingTo: Rcpp, RcppEigen
 Encoding: UTF-8

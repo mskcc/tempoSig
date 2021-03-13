@@ -15,6 +15,7 @@
 #' @slot pvalue P-values of exposures estimated from permutation tests;
 #'            same dimension as \code{expos}
 #' @slot logLik Log likelihood
+#' @slot misc List of factorization results and measures for de novo runs
 #' @return Object of class \code{tempoSig}
 #' @export tempoSig
 setClass('tempoSig',
@@ -68,7 +69,7 @@ tempoSig <- function(data, signat = 'v2'){
     }
   }
   
-  signat <- signat / colSums(signat) # renormalize just in case (also to remove truncation errors)
+  signat <- t(t(signat) / colSums(signat)) # renormalize just in case (also to remove truncation errors)
   if(!all(abs(colSums(signat) - 1) < 1e-4)) stop('Signature list not normalized')
   nts <- rownames(signat)
   ntd <- rownames(data)

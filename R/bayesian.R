@@ -123,10 +123,14 @@ vbnmf_updateR <- function(x, wh, r, hyper, fudge=NULL){
 vb_init <- function(nrow,ncol,mat,rank, max=1.0, hyper, initializer){
   
    if(initializer=='random'){
-     w <- matrix(stats::rgamma(n=nrow*rank, shape=hyper$aw, 
-           scale=hyper$bw/hyper$aw), nrow=nrow, ncol=rank, byrow=TRUE)
-     h <- matrix(stats::rgamma(n=rank*ncol, shape=hyper$ah, 
-           scale=hyper$bh/hyper$ah), nrow=rank, ncol=ncol, byrow=FALSE)
+     if(hyper$aw > 0) awshape <- hyper$aw
+     else awshape <- 1.0
+     if(hyper$ah > 0) ahshape <- hyper$ah
+     else ahshape <- 1.0
+     w <- matrix(stats::rgamma(n=nrow*rank, shape=awshape, 
+           scale=hyper$bw/awshape), nrow=nrow, ncol=rank, byrow=TRUE)
+     h <- matrix(stats::rgamma(n=rank*ncol, shape=ahshape, 
+           scale=hyper$bh/ahshape), nrow=rank, ncol=ncol, byrow=FALSE)
    }else stop('Unknown initializer')
   
    dw <- matrix(0, nrow=nrow, ncol=rank)
@@ -183,8 +187,7 @@ vb_init <- function(nrow,ncol,mat,rank, max=1.0, hyper, initializer){
 #' @export
 bnmf <- function(object, ranks=2:10, nrun=1, verbose=2, 
                          progress.bar=TRUE, initializer='random',
-                         Itmax=10000, hyper.update=rep(TRUE,4), 
-                         hyper.tying='ikj', normalize.sig=TRUE,
+                         Itmax=10000, hyper.update=rep(TRUE,4),
                          gamma.a=1, gamma.b=1, Tol=1e-5, 
                          hyper.update.n0=10, hyper.update.dn=1, 
                          fudge=NULL, kstar = 'kmax', useC = FALSE,
@@ -192,11 +195,11 @@ bnmf <- function(object, ranks=2:10, nrun=1, verbose=2,
   
    if(!kstar %in% c('kmax','kopt')) stop('Unknown option for kstar')
    if(is.null(fudge)) fudge <- .Machine$double.eps
-   mat <- catalog(object) # S4 class scNMFSet
+   mat <- catalog(object)
    
    nullr <- sum(Matrix::rowSums(mat)==0)
    nullc <- sum(Matrix::colSums(mat)==0)
-   if(nullr>0) stop('Input matrix contains empty rows')
+#  if(nullr>0) stop('Input matrix contains empty rows')
    if(nullc>0) stop('Input matrix contains empty columns')
    
    ranks <- ranks[ranks <= ncol(mat)] # rank <= no. of columns
@@ -204,8 +207,7 @@ bnmf <- function(object, ranks=2:10, nrun=1, verbose=2,
 
    bundle <- list(mat=mat, ranks=ranks, verbose=verbose, gamma.a=gamma.a,
                   gamma.b=gamma.b, initializer=initializer, 
-                  Itmax=Itmax, fudge=fudge, 
-                  hyper.tying=hyper.tying,
+                  Itmax=Itmax, fudge=fudge,
                   hyper.update=hyper.update, 
                   hyper.update.n0=hyper.update.n0, 
                   hyper.update.dn=hyper.update.dn, Tol=Tol,
@@ -232,20 +234,16 @@ bnmf <- function(object, ranks=2:10, nrun=1, verbose=2,
      h <- vb[[imax]]$hdat[[k]]
      dw <- vb[[imax]]$dwdat[[k]]
      dh <- vb[[imax]]$dhdat[[k]]
-     if(normalize.sig){
-        cw <- colSums(w)
-        w <- t(t(w) / cw)
-        h <- h * cw
-        dw <- t(t(dw) / cw^2)
-        dh <- h * cw^2
-     }
+     cw <- colSums(w)   # normalization
+     w <- t(t(w) / cw)
+     h <- h * cw
+     dw <- t(t(dw) / cw^2)
+     dh <- h * cw^2
      basis[[k]] <- w
      coeff[[k]] <- h
 
-#     if(initializer!='restart'){
-       rownames(basis[[k]]) <- rownames(mat)
-       colnames(coeff[[k]]) <- colnames(mat)
-#     }
+     rownames(basis[[k]]) <- rownames(mat)
+     colnames(coeff[[k]]) <- colnames(mat)
    }
    
    if(kstar=='kmax') Kstar <- max(which(is.finite(rdat)))
@@ -299,14 +297,18 @@ bnmf_iterate <- function(irun, bundle){
      }
      lk0 <- 0
      for(it in seq_len(bundle$Itmax)){
-       if(bundle$useC)
+       if(bundle$useC){
           wh <- vbnmf_update(as.matrix(bundle$mat), wh, hyper, c(bundle$fudge))
+          rownames(wh$w) <- rownames(wh$ew) <- rownames(wh$lw) <- rownames(wh$dw) <- rownames(bundle$mat)
+          colnames(wh$h) <- colnames(wh$eh) <- colnames(wh$lh) <- colnames(wh$dh) <- colnames(bundle$mat)
+          colnames(wh$w) <- colnames(wh$ew) <- colnames(wh$lw) <- colnames(wh$dw) <- seq(rank)
+          rownames(wh$h) <- rownames(wh$eh) <- rownames(wh$lh) <- rownames(wh$dh) <- seq(rank)
+       }
        else
           wh <- vbnmf_updateR(bundle$mat, wh, rank, hyper, fudge=bundle$fudge)
        if(bundle$initializer=='restart' | 
           it > bundle$hyper.update.n0 & it%%bundle$hyper.update.dn==0) 
-         hyper <- hyper_update(bundle$hyper.update, wh, hyper, 
-                               hyper.tying=bundle$hyper.tying, Niter=100, Tol=1e-3)
+         hyper <- hyper_update(bundle$hyper.update, wh, hyper, Niter=100, Tol=1e-3)
        if(is.na(wh$lkh)) break
        if(it>1) if(it > bundle$hyper.update.n0)
           if(wh$lkh>=lk0) if(abs(1-wh$lkh/lk0) < bundle$Tol) break

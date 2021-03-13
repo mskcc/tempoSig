@@ -6,21 +6,26 @@
 \usage{
 nmf(
   catalog,
-  denovo = FALSE,
   signat = NULL,
+  denovo = TRUE,
   K = NULL,
   nrun = 10,
-  ard = FALSE,
   verbose = FALSE,
   progress.bar = FALSE,
   Itmax = 1e+05,
   Tol = 1e-04,
   a = 10,
-  nprint = 100,
-  penalizer = "l2"
+  nprint = 100
 )
 }
 \arguments{
+\item{catalog}{Catalog matrix}
+
+\item{signat}{Signature matrix}
+
+\item{denovo}{Full iteration of both signature and exposure; if \code{FALSE} (\code{hnmf}),
+only the exposure is fit (requires \code{signat} input).}
+
 \item{K}{Number of signatures.}
 
 \item{nrun}{Number of independent runs to generate}
@@ -32,8 +37,6 @@ nmf(
 \item{Itmax}{Maximum no. of iteration.}
 
 \item{Tol}{Tolerance for checking convergence.}
-
-\item{object}{\code{tempoSig}.}
 }
 \value{
 Object of class \code{tempoSig}.
