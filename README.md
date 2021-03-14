@@ -1,5 +1,5 @@
 # tempoSig
-Mutational Signature Extraction using Maximum Likelihood and Bayesian NMF
+Mutational Signature Extraction using Maximum Likelihood and NMF
 
 ## Overview
 **tempoSig** implements maximum likelihood-based extraction of mutational signature proportions of a set of mutation count data under a known set of input signature lists (refitting). In addition, it also includes de novo extraction based on Bayesian non-negative matrix factorization, which enables the determination of the most likely number of signatures. 
