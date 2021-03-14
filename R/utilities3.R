@@ -102,3 +102,24 @@ sigplot <- function(x, error = NULL, lwd = 0.5){
   return(invisible(xt))
 }
 
+#' Filter exposures using p-values
+#' 
+#' @param object Object of class \code{tempoSig}
+#' @param alpha Type-I error treshold
+#' @param attribution If \code{TRUE}, output is multiplied by mutation counts of each sample
+#' @return Matrix of filtered exposure or attribution
+#' @export
+filterExposure <- function(object, alpha = 0.05, attribution = TRUE){
+  
+  if(!is(object, 'tempoSig')) stop('Object is not of class tempoSig')
+  E <- expos(object)
+  pv <- pvalue(object)
+  if(NROW(pv) == 0 | NCOL(pv) == 0) stop('p-value has not been filled')
+  
+  E2 <- E
+  for(k in seq(NROW(E))) for(i in seq(NCOL(E)))
+    if(pv[k, i] >= alpha) E2[k, i] <- 0
+  if(attribution) E2 <- E2 * tmb(object)
+  
+  return(E2)
+}

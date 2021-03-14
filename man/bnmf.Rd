@@ -13,8 +13,6 @@ bnmf(
   initializer = "random",
   Itmax = 10000,
   hyper.update = rep(TRUE, 4),
-  hyper.tying = "ikj",
-  normalize.sig = TRUE,
   gamma.a = 1,
   gamma.b = 1,
   Tol = 1e-05,

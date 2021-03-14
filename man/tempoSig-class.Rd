@@ -31,5 +31,7 @@ sample with signatures in columns}
 same dimension as \code{expos}}
 
 \item{\code{logLik}}{Log likelihood}
+
+\item{\code{misc}}{List of factorization results and measures for de novo runs}
 }}
 

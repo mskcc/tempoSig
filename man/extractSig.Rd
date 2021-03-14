@@ -16,6 +16,7 @@ extractSig(
   pvtest = "permutation",
   cosmic = FALSE,
   Kmin = 2,
+  K = 2,
   Kmax = 30,
   nrun = 10,
   useC = TRUE,

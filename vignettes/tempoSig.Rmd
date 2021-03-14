@@ -1,5 +1,5 @@
 ---
-title: "tempoSig: Mutational signature inference using maximum likelihood"
+title: "tempoSig: Mutational signature inference using maximum likelihood and NMF"
 output: 
   html_document:
     toc: true
@@ -54,6 +54,7 @@ estimate the exposure matrix $\sf{H}$, whose columns give relative proportions o
 signatures present in each sample [@rosenthal2016].
 
 ## Maximum likelihood 
+
 The refitting functions in 
 `tempoSig` are based on the maximum likelihood inference algorithm adapted from
 [mutation-signatures](https://github.com/mskcc/mutation-signatures).
@@ -141,6 +142,14 @@ to all signatures and requires less computation than signature permutation. We f
 it to genereally yield results similar to signature permutation but does not
 adequately deal with ``unspecific'' signatures such as Signature 3 (homologous recombination defect). 
 
+## De novo inference
+
+In de novo inference, both the signature $\sf{H}$ and exposure matrices $\sf{W}$ are inferred simultaneously in an unsupervised manner [@alexandrov2013]. `tempoSig` includes functions based on a Bayesian formulation of the
+non-negative matrix factorization algorithm [@lee_seung], where the marginal likelihood of models with
+varying number of signatures is estimated by a variational algorithm [@bishop; @cemgil]. This feature
+enables the most likely number of signatures present in the samples via evaluation of the statistical support 
+provided by the data.
+
 # Software usage
 
 ## Installation
@@ -182,10 +191,11 @@ are
 * `pvalue`: matrix of estimated $p$-values: dimension $n \times K$ with
   samples in rows and signatures in columns.
 * `logLik`: vector of log-likelihood values for each sample.
+* `misc`: List of objects associated with de novo infererence.
   
 The primary input data takes the form of catalog matrix $\sf{X}$. An example is
 provided by the file
-```{r}
+```{r catalog}
 catalog <- system.file('extdata', 'tcga-brca_catalog.txt', package = 'tempoSig')
 x <- read.table(catalog)
 dim(x)
@@ -202,14 +212,14 @@ two adjacent nucleotides.
 
 An object of class `tempoSig` is created with the catalog data frame as the main 
 argument:
-```{r}
+```{r temposig}
 s <- tempoSig(data = x)
 s
 ```
 The object initiation also can include specification of reference signatures via
 the optional second argument in `tempoSig(data, signat = NULL)`, which by default
 is read from the file
-```{r}
+```{r sbs}
 sbs <- read.table(system.file('extdata', 'cosmic_snv_signatures_v2.txt',
                               package = 'tempoSig'))
 dim(sbs)
@@ -223,9 +233,10 @@ There are other files for alternative references also included:
 * `cosmic_sigProfiler_SBS_signatures.txt`: COSMIC version 3 from whole-genome data (sigProfiler)
 * `cosmic_sigProfiler_SBS_exome_signatures.txt`: COSMIC version 3 from exome data
 * `cosmic_SigAnalyzer_SBS_signatures.txt`: COSMIC version 3 from whole-genome data (SigAnalyzer)
+* `cosmic_sigProfiler_SBS_signatures_v3.1.txt`: COSMIC version 3.1
 
 They can be used as follows:
-```{r}
+```{r sig2}
 sig2 <- read.table(system.file('extdata', 'cosmic_SigAnalyzer_SBS_signatures.txt',
                                package = 'tempoSig'))
 dim(sig2)
@@ -235,7 +246,7 @@ s2
 ```
 The `signat` argument can take the file name directly. For convenience, a character
 short-hand can also be used:
-```{r, eval = TRUE}
+```{r sv2, eval = TRUE}
 s_v2 <- tempoSig(data = x, signat = 'v2')  # COSMIC v2 (default)
 s_v3 <- tempoSig(data = x, signat = 'SA')  # COSMIC v3 SigAnalyzer
 s_v4 <- tempoSig(data = x, signat = 'SP')  # COSMIC v3 sigProfiler
@@ -259,7 +270,7 @@ files, which
 collect variant data of multiple samples with annotations. The package
 [maftools](https://bioconductor.org/packages/maftools/) can be used to
 derive catalog matrices from MAF files:
-```{r, eval=FALSE}
+```{r laml, eval=FALSE}
 if(!require('BiocManager')) install.packages('BiocManager')
 if(!require('maftools')) BiocManager::install('maftools')
 if(!require('BSgenome.Hsapiens.UCSC.hg19'))
@@ -271,39 +282,39 @@ laml.tnm <- maftools::trinucleotideMatrix(maf = laml, prefix = 'chr', add = TRUE
 catalog <- t(laml.tnm$nmf_matrix)
 ```
 
-## Inference
+## Refitting
 
-Maximum likelihood inference is performed by 
-```{r, echo=FALSE, eval=TRUE}
+Refitting using maximum likelihood inference is performed by 
+```{r refit, echo=FALSE, eval=TRUE}
 s <- extractSig(s, progress.bar = FALSE)
 ```
-```{r, echo=TRUE, eval=FALSE}
+```{r refit2, echo=TRUE, eval=FALSE}
 s <- extractSig(s, progress.bar = TRUE)
 ```
 The option `progress.bar = TRUE` displays a progress bar, useful for 
 large samples. The inference fills the `expos` slot of the object:
-```{r}
+```{r expos}
 expos(s)[1:5,1:2]
 rowSums(expos(s))
 ```
 Note that each row gives proportions of reference signatures, which add up to 1.
 
 By default, $p$-value estimation is skipped:
-```{r}
+```{r pvalues}
 pvalue(s)
 ```
 The flag `compute.pval = TRUE` turns it on:
-```{r, eval = FALSE, echo= TRUE}
+```{r pvtrue, eval = FALSE, echo= TRUE}
 set.seed(135)
 s <- extractSig(s, compute.pval = TRUE, pvtest = 'permutation', nperm = 1000, 
                 progress.bar = TRUE)
 ```
-```{r, eval = TRUE, echo = FALSE, cache=TRUE}
+```{r pvtrue2, eval = TRUE, echo = FALSE, cache=TRUE}
 set.seed(135)
 s <- extractSig(s, compute.pval = TRUE, pvtest = 'permutation', nperm = 1000, 
                 progress.bar = FALSE)
 ```
-```{r}
+```{r pvshow}
 pvalue(s)[1:5, 1:5]
 ```
 The above uses the default signature permutation algorithm. 
@@ -313,13 +324,13 @@ $P < 1/1000$.
 The other two options for algorithm are `pvtest = 'lrt'` (likelihood ratio test) and
 `pvtest = 'x.permutation'` (count permutation; see above). We try the `lrt` 
 for comparison:
-```{r, eval = FALSE, echo = TRUE}
+```{r nperm, eval = FALSE, echo = TRUE}
 sl <- extractSig(s, compute.pval = TRUE, pvtest = 'lrt', progress.bar = TRUE)
 ```
-```{r, eval = TRUE, echo = FALSE}
+```{r nperm2, eval = TRUE, echo = FALSE}
 sl <- extractSig(s, compute.pval = TRUE, pvtest = 'lrt', progress.bar = FALSE)
 ```
-```{r}
+```{r pvshow2}
 pvalue(sl)[1:5,1:5]
 ```
 Note how $P=0$ in `permutation` comes out as nonzero from `lrt` but generally the values 
@@ -339,28 +350,126 @@ plotExposure(s, sample.id = sid, cutoff = 1e-3, cex.axis = 0.7, cex.names = 0.8)
 The argument `sample.id` can also be an integer index. The `cutoff` argument filters
 proportions with the minimum value supplied.
 The $p$-values
-```{r}
+```{r print}
 p <- pvalue(s)[sid,]
 p[c('Signature.1','Signature.2','Signature.19','Signature.22')]
 ```
 indicate `Signature.22` is insignificant and 'Signature.2' is borderline. 
 We can get a non-zero upper bound for the
 `Signature.1` p-value using `lrt`:
-```{r}
+```{r p2}
 p2 <- pvalue(sl)[sid,]
 p2[c('Signature.1','Signature.2','Signature.19','Signature.22')]
 ```
 Again, note the over-estimation under `lrt`.
 
 The function
-```{r, eval=FALSE}
+```{r writee, eval=FALSE}
 writeExposure(s, output = 'exposure.tsv', sep = '\t', rm.na = TRUE)
 ```
 will write the exposure, along with $p$-values if any, to a single file. 
 Alternatively, one can choose to write two files, one for exposure and the other for
 $p$-values via
-```{r, eval=FALSE}
+```{r writee2, eval=FALSE}
 writeExposure(s, output = 'exposure.tsv', pv.out = 'pvalues.tsv')
 ```
+
+## De novo inference
+
+We illustrate de novo inferences using a larger TCGA-BRCA catalog data:
+```{r tcga-brca, eval=TRUE}
+brca <- read.table(system.file('extdata', 'tcga_brca_mutect_catalog.txt',
+                               package = 'tempoSig'))
+tcga <- tempoSig(data = brca)
+tcga
+```
+
+The original NMF algorithm [@lee_seung] applied to signature extraction [@alexandrov2013] is available
+in `tempoSig` as a special case of the Bayesian algorithm (fixed prior with hyperparameter not updated):
+```{r nmf, eval = TRUE}
+set.seed(135)
+tcga1 <- extractSig(tcga, method = 'nmf', K = 5, nrun = 10)
+tcga1
+```
+The `nmf` method will invoke the maximum likelihood (non-Bayesian) NMF algorithm, which solves the 
+factorization problem for the count matrix iteratively `nrun` times under a given size `K` of signature set
+(row and column sizes of matrices $\sf{W}$ $\sf{H}, respectively). Among `nrun` solutions, the best one with
+the highest likelihood value is chosen and stored in the object returned. In production runs, an `nrun` value
+exceeding $\sim 50$ is recommended.
+
+```{r nmf2, eval = TRUE, fig.width=10, fig.height=5, fig.fullwidth = TRUE}
+sd0 <- signat(tcga1)
+cs0 <- cosineSimilarity(A = sd0, B = sbs)
+head(cs0)
+heatmap(t(cs0), Rowv = NA, Colv = NA, scale = 'none', revC = TRUE)
+```
+
+In the above, we computed the cosine similarity matrix of the 5 de novo signatures with the COSMIC v2 set.
+The heatmap indicates that `S1-S5` correspond to Signatures 1 (Aging), 10 (POLE), 6 (MMR), 3 (HRD), and 
+2 (APOBEC), respectively.
+The following may be used to obtain an assignment based on such overlaps if visual inspection is ambiguous:
+```{r lsap, eval = TRUE}
+lsap <- clue::solve_LSAP(cs0, maximum = TRUE)
+sassign <- colnames(cs0)[lsap]
+names(sassign) <- rownames(cs0)
+sassign
+```
+
+A function `sigplot` will plot signature profiles to aid comparison:
+```{r sigplot, eval = TRUE, fig.width=10, fig.height=10, fig.fullwidth = TRUE}
+old.par <- par(mfrow = c(5, 2), mar = c(3,3,3,1), lwd = 0.2, cex = 1)
+for(k in seq(5)){
+  sigplot(sd0[, names(sassign)[k]])
+  title(main = names(sassign)[k])
+  sigplot(sbs[, sassign[k]])
+  title(main = sassign[k])
+}
+par(old.par)
+```
+
+## De novo inference with variable number of signatures
+
+In the previous de novo inference example, the number of signatures was set as 5, while this number ($K$) is
+unknown in practice. Commonly, the maximum likelihood NMF is augmented by quality measures (reproducibility of
+extraction results, etc) to help decide the optimal $K$. A more direct way to determine $K$ is to use
+a Bayesian formulation and compute marginal likelihood. The non-Bayesian version invoked by
+`extractSig(..., method = nmf)` above is in fact a special case of this Bayesian algorithm.
+We scan a range of $K$ values via
+```{r bnmf, fig.width=5, fig.height=4, fig.fullwidth = FALSE}
+set.seed(152)
+tscan <- extractSig(tcga, method = 'bnmf', Kmax = 10, nrun = 10, verbose = 1)
+me <- misc(tscan)$measure
+me
+plot(me, type='b')
+```
+Note that individual runs consist of $K$ values scanned from 2 (default) to `Kmax`. Often, increasing
+the size of signature set by one will result in redundant signatures beyond a certain $K$ value. If 
+this occurrs, the scan will stop and print this upper bound `Kmax`. In the example above, this upper bound
+is often smaller than the maximum 10.
+A utility function `kstar` will find the optimal $K$ (cautioned against blind-usages; a visual review is
+often necessary):
+```{r kstar}
+kstar(me)$ropt
+```
+
+The object returned by `extractSig(..., method = 'bnmf')` with multiple $K$ scanned will in general not
+contain the desired signature and exposure matrices in its slots. Therefore, one needs to run another 
+inference with a single $K$ determined:
+```{r bnmf2}
+tcga2 <- extractSig(tcga, method = 'bnmf', Kmin = 7, Kmax = 7)
+tcga2
+```
+It is worth noting that this single-$K$ run output uses a model more general (gamma priors with 
+hyper-parameter optmized) than the non-Bayesian version obtained with `method = 'nmf'`.
+```{r bnmf3, eval = TRUE, fig.width=10, fig.height=5, fig.fullwidth = TRUE}
+sd1 <- signat(tcga2)
+cs2 <- cosineSimilarity(A = sd1, B = sbs)
+heatmap(t(cs2), Rowv = NA, Colv = NA, scale = 'none', revC = TRUE)
+lsap2 <- clue::solve_LSAP(cs2, maximum = TRUE)
+sassign2 <- colnames(cs2)[lsap2]
+names(sassign2) <- rownames(cs2)
+sassign2
+```
+Two additional signatures found here resemble Signature 24 and Signature 11.
 
 # References

@@ -252,7 +252,7 @@ bnmf <- function(object, ranks=2:10, nrun=1, verbose=2,
    signat(object) <- basis[[Kstar]]
    H <- coeff[[Kstar]]
    expos(object) <- t(t(H)/colSums(H))
-   misc(object)[['measure']] <- data.frame(rank=ranks2, lml=rdat)
+   misc(object)[['measure']] <- data.frame(K = ranks2, LML = rdat)
 
    return(object)
 }
@@ -266,7 +266,7 @@ bnmf_iterate <- function(irun, bundle){
    rdat <- rep(-Inf, nrank)
    wdat <- hdat <- dwdat <- dhdat <- hyperp <- list()
 
-   if(bundle$verbose >= 2) if(bundle$nrun > 1) 
+   if(bundle$verbose >= 1) if(bundle$nrun > 1) 
      cat('Run ',irun,'\n',sep='')
    
    for(irank in seq_len(nrank)){
@@ -320,7 +320,7 @@ bnmf_iterate <- function(irun, bundle){
      if(sum(contains.unif)>0){
 #       cat('K ',rank,' row/column ',
 #              paste(which(contains.unif),collapse=','),' constant.\n')
-       cat('Kmax = ',rank - 1, '\n')
+       if(bundle$verbose >= 1) cat('Kmax = ',rank - 1, '\n')
        break
      }
      rdat[irank] <- lk0
