@@ -442,6 +442,7 @@ me <- misc(tscan)$measure
 me
 plot(me, type = 'b', las = 1, bty = 'n')
 ```
+
 Note that individual runs consist of $K$ values scanned from 2 (default) to `Kmax`. Often, increasing
 the size of signature set by one will result in redundant signatures beyond a certain $K$ value. If 
 this occurrs, the scan will stop and print this upper bound `Kmax`. In the example above, this upper bound
@@ -452,7 +453,7 @@ often necessary):
 kstar(me)$ropt
 ```
 
-The object returned by `extractSig(..., method = 'bnmf')` with multiple $K$ scanned will in general not
+The object returned by `extractSig(..., method = 'bnmf')` scanning multiple $K$ will in general not
 contain the desired signature and exposure matrices in its slots. Therefore, one needs to run another 
 inference with a single $K$ determined:
 ```{r bnmf2}
