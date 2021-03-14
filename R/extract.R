@@ -76,6 +76,10 @@ extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb
     H <- t(nmf$H)
     if(method != 'hnmf'){ 
       W <- nmf$W
+      if(is.null(rownames(W))) rownames(W) <- nt
+      if(is.null(colnames(W))) colnames(W) <- S <- paste0('S', seq(ncol(W)))
+      if(is.null(colnames(H))) colnames(H) <- S
+      if(is.null(rownames(H))) rownames(H) <- colnames(spectrum)
 #     if(cosmic){
 #       cosine <- cosineSimilarity(A = W, B = ref, diag = FALSE)
 #       lsap <- clue::solve_LSAP(cosine, maximum = TRUE)
