@@ -2,7 +2,9 @@
 Mutational Signature Extraction using Maximum Likelihood
 
 ## Overview
-**tempoSig** implements maximum likelihood-based extraction of mutational signature proportions of a set of mutation count data under a known set of input signature lists. The basic algorithm is the same as in [mutation-signatures](https://github.com/mskcc/mutation-signatures), but re-implemention in R/C++ here enables a substantial speed-up of the order of ~100x. This speed-up allows for the fast estimation of p-values via permutation-based sampling. The basic object (S4 class) can store input data, reference signature list, output exposure of samples, and p-values. Utilities for plotting and file ouput are also included. 
+**tempoSig** implements maximum likelihood-based extraction of mutational signature proportions of a set of mutation count data under a known set of input signature lists (refitting). In addition, it also includes de novo extraction based on Bayesian non-negative matrix factorization, which enables the determination of the most likely number of signatures. 
+
+The basic algorithm for refitting is the same as in [mutation-signatures](https://github.com/mskcc/mutation-signatures), but re-implemention in R/C++ here enables a substantial speed-up of the order of ~100x. This speed-up allows for the fast estimation of p-values via permutation-based sampling. The basic object (S4 class) can store input data, reference signature list, output exposure of samples, and p-values. Utilities for plotting and file ouput are also included. 
 
 ## Algorithm
 Input data are of the form of catalog matrix:
@@ -197,35 +199,15 @@ Note that p-value of 0 indicates that out of `NPERM` samples, none exceeded **H1
 
 ## Documentation
 
-For more detailed interactive usage and extra options, see the [vignettes](http://htmlpreview.github.io/?https://github.com/mskcc/tempoSig/blob/master/old/tempoSig.html).
+See [vignettes](http://htmlpreview.github.io/?https://github.com/mskcc/tempoSig/blob/master/old/tempoSig.html) for more detailed documentations of interactive usages for refitting as well as de novo extraction.
 
 ## Benchmark
 
-In **Fig. 1**, the function [`simulateSpectra()`](man/simulateSpectra.Rd) was used with a breast cancer-like signature exposure profile (version 2) to generate simulated data of sample size 100 and mean TMB of 500 per genome. The **tempoSig** and [mutation-signatures](https://github.com/mskcc/mutation-signatures) were used to estimate exposures, which are identical. These estimates are broadly consistent with true exposure values. The accuracy improves with increasing mutation loads.
 
-<figure>
-<img src="https://github.com/mskcc/tempoSig/blob/master/old/msig_vs_cli.png" align="center" height="432" width="432"/>
-    <figcaption> Fig. 1: Comparison of exposure fits from tempoSig and mutation-signatures. Data were simulated with breast cancer-like signatures. True exposure values are also shown along the y-axis. </figcaption>
-</figure>
-
-<br>
-</br>
-
-In **Fig. 2**, **tempoSig** and **mutation-signatures** running times were measured for varing sample sizes (fixed TMB of 500). The command-line version of **tempoSig** has overhead costs in speed compared to interactive R runs using the function [`extractSig()`](man/extractSig.Rd), which decreases in relative magnitude with increasing sample size. Overall, the efficiency gain of **tempoSig** is up to ~400x.
-
-<br>
-
-<figure>
-<img src="https://github.com/mskcc/tempoSig/blob/master/old/time_cli.png" align="center" height="432" width="432"/>
-    <figcaption> Fig. 2: Running time of tempoSig and mutation-signatures on data of varying sizes. Other conditions same as in Fig. 1. </figcaption>
-</figure>
-
-<br>
-
-In **Fig. 3**, the overall accuracy of exposure proportions inferred from data sets simulated with breast cancer-like signature proportions were compared to true values using cosine similarity (higher the better; ranges from 0 to 1). Five other existing algorithms for refitting ([deconstructSigs](https://cran.r-project.org/package=deconstructSigs), [YAPSA](https://www.bioconductor.org/packages/YAPSA/), [MutationalPatterns](https://bioconductor.org/packages/MutationalPatterns/), [MutationalCone](https://doi.org/10.1371/journal.pone.0221235), and [decompTumor2Sig](https://www.bioconductor.org/packages/decompTumor2Sig/)) were applied to the same data sets and their results compared to `tempoSig`. Although those more recent than `deconstructSigs`, one of the earliest refitting algorithms, exhibited similar performance, the maximum likelihood-based inference (`tempoSig` and `mutation-signatures`) consistently outperformed all others.
+In **Fig. 1**, the overall accuracy of exposure proportions inferred from data sets simulated with breast cancer-like signature proportions were compared to true values using cosine similarity (higher the better; ranges from 0 to 1). Five other existing algorithms for refitting ([deconstructSigs](https://cran.r-project.org/package=deconstructSigs), [YAPSA](https://www.bioconductor.org/packages/YAPSA/), [MutationalPatterns](https://bioconductor.org/packages/MutationalPatterns/), [MutationalCone](https://doi.org/10.1371/journal.pone.0221235), and [decompTumor2Sig](https://www.bioconductor.org/packages/decompTumor2Sig/)) were applied to the same data sets and their results compared to `tempoSig`. Although those more recent than `deconstructSigs`, one of the earliest refitting algorithms, exhibited similar performance, the maximum likelihood-based inference (`tempoSig` and `mutation-signatures`) consistently outperformed all others.
 
 <br>
 <figure>
 <img src="https://github.com/mskcc/tempoSig/blob/master/old/cosim6.png" align="center" height="480" width="600"/>
-    <figcaption> Fig. 3: Accuracy comparison of exposures predicted from simulated data of varying mutation loads with six refitting algorithms. </figcaption>
+    <figcaption> Fig. 1: Accuracy comparison of exposures predicted from simulated data of varying mutation loads with six refitting algorithms. </figcaption>
 </figure>
