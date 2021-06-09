@@ -123,3 +123,123 @@ filterExposure <- function(object, alpha = 0.05, attribution = TRUE){
   
   return(E2)
 }
+
+#' Construct catalog matix from MAF file (without of Ref_Tri column)
+#' 
+#' @param maf MAF file or data frame of chromosome, position, ref, and alt alleles
+#' @param ref.genome Reference genome of class \code{BSgenome}
+#' @param fix.chr Modify chromosome names into \code{chr1, chr2, ...} for \code{ref.genome}
+#' @param progress.bar Display progress bar
+#' @return Catalog matrix
+#' @examples 
+#' library(BSGenome.Hsapiens.UCSC.hg19)
+#' maf <- system.file('extdata', 'brca.maf', package = 'tempoSig')
+#' x <- maf2cat3(maf, BSGenome.Hsapiens.HCSC.hg19)
+#' head(x)
+#' 
+#' @export
+maf2cat3 <- function(maf, ref.genome, fix.chr = TRUE, progress.bar = TRUE){
+  
+  if(is(maf, 'character')){
+    if(!file.exists(maf)) stop(paste0('File ', maf, ' does not exist'))
+    maf <- data.table::fread(maf, data.table = F)
+  } 
+  if(fix.chr) maf <- readMAFforcat(maf = maf)
+  
+  colnames(maf)[colnames(maf) == 'Start_position'] <- 'Start_Position'
+  colnames(maf)[colnames(maf) == 'End_position'] <- 'End_Position'
+  
+  if('Variant_Type' %in% colnames(maf)) 
+    maf <- maf[maf$Variant_Type == 'SNP', ]
+  
+  cmplmnt <- c('A' = 'T', 'T' = 'A', 'G' = 'C', 'C' = 'G')
+  
+  coln <- c('Chromosome', 'Start_Position', 'Reference_Allele', 'Tumor_Seq_Allele2', 'Tumor_Sample_Barcode')
+  if(sum(!coln %in% colnames(maf)) > 0) 
+    stop(paste0('Necessary columns of MAF are missing: ', coln, collapse = ''))
+
+  if(!is(ref.genome, 'BSgenome'))
+     stop('ref.genome must be of class BSgenome')
+  
+  chr <- unique(maf[,'Chromosome'])
+  if(sum(!chr %in% seqnames(ref.genome)) > 0) stop('There is an unknown chromosome name')
+  
+  ref.chr <- seqnames(ref.genome)
+  nchr <- length(chr)
+  
+  if(progress.bar)
+    pb <- txtProgressBar(style = 3)
+
+  nt <- trinucleotides()
+  tsb <- unique(maf$Tumor_Sample_Barcode)
+  nsample <- length(tsb)
+  xcat <- matrix(0, nrow = length(nt), ncol = nsample)
+  rownames(xcat) <- nt
+  colnames(xcat) <- tsb
+  
+  for(k in seq_along(ref.chr)){
+    kchr <- ref.chr[k]
+    dat <- maf[maf$Chromosome==kchr, ]
+    if(NROW(dat) == 0) next()
+    rchr <- ref.genome[[kchr]]
+    dat <- dat[dat$Start_Position > 1 & dat$Start_Position < length(rchr), ]
+    m <- NROW(dat)
+    if(m ==0) next()
+    # subset of variants within reference positions
+    pos <- dat$Start_Position
+    ref.alleles <- rchr[pos]
+    if(as.character(ref.alleles) != paste0(dat$Reference_Allele, collapse = ''))
+      stop('Ref. alleles in data and ref.genome do not match')
+    
+    ref.tri <- matrix(NA, nrow = m, ncol = 4)
+    ref.tri[, 2] <- dat$Reference_Allele
+    ref.tri[, 3] <- dat$Tumor_Seq_Allele2
+    ref.tri[, 1] <- strsplit(as.character(rchr[pos - 1]), split = '')[[1]]
+    ref.tri[, 4] <- strsplit(as.character(rchr[pos + 1]), split = '')[[1]]
+    
+    purines <- ref.tri[, 2] %in% c('A', 'G')
+    for(i in seq(4))
+      ref.tri[purines, i] <- cmplmnt[ref.tri[purines, i]]
+    ref.tri[purines, c(1, 4)] <- ref.tri[purines, c(4, 1)] # got to reverse the +-1 position
+    ref.tri <- apply(ref.tri, 1, 
+                     function(x){paste0(x[1], '[', x[2], '>', x[3], ']', x[4], collapse = '')})
+    
+    cnt <- as.matrix(table(ref.tri, dat$Tumor_Sample_Barcode))
+    cnt <- cnt[rownames(cnt) %in% nt, , drop = F]  # discard mutation types not in 96 (eg., N[C>T]A)
+    xcat[rownames(cnt), colnames(cnt)] <- xcat[rownames(cnt), colnames(cnt)] + cnt
+    
+    if(progress.bar) setTxtProgressBar(pb, k/nchr)
+  }
+  if(progress.bar) close(pb)
+  
+  return(xcat)
+}
+
+#' Read MAF file and Fix Chromosome Names
+#' 
+#' This function is a wrapper intended for use in \code{maf2cat3}, which requires chromosome names
+#' compatible with \code{BSgenome.Hsapiens.UCSC.hg19} (\code{chr1, ..., chrX, chrY}).
+#' 
+#' @param maf MAF file path
+#' @export
+#' @return Data frame with chromosome names fixed
+#' @examples
+#' maf <- system.file('extdata', 'brca.maf', package = 'tempoSig')
+#' maf <- readMAFforcat(maf)
+#' head(maf)
+#' 
+readMAFforcat <- function(maf){
+  
+  if(is.character(maf)){
+    if(!file.exists(maf)) stop(paste0('File ',maf, 'does not exist'))
+    x <- data.table::fread(maf, data.table = F)
+  } else
+    x <- as.data.frame(maf)
+  
+  flag <- !grepl('chr', x$Chromosome)
+  x[flag, 'Chromosome'] <- paste0('chr', x[flag, 'Chromosome'])
+  x[x$Chromosome == 'chr23', 'Chromosome'] <- 'chrX'
+  x[x$Chromosome == 'chr24', 'Chromosome'] <- 'chrY'
+  
+  return(x)
+}

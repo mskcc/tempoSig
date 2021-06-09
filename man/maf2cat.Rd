@@ -4,14 +4,16 @@
 \alias{maf2cat}
 \title{Generate Mutation Catalog from MAF file}
 \usage{
-maf2cat(maf)
+maf2cat(maf, progress.bar = TRUE)
 }
 \arguments{
-\item{maf}{MAF file name. It must contain a column named \code{Ref_Tri} 
+\item{maf}{MAF file name or data frame. It must contain a column named \code{Ref_Tri} 
 containing the trinucleotide sequences surrounding the mutation site.
 If the mutation site reference allele is \code{A, G}, the \code{Ref_Tri}
 is the complement sequence of the trinucleotides, such that its central
 allele is always \code{C, T}.}
+
+\item{progress.bar}{Display progress bar}
 }
 \value{
 Count matrix with mutation contexts in rows and \code{Tumor_Sample_Barcode}

@@ -189,40 +189,49 @@ writeExposure <- function(object, output, sep = '\t', rm.na = FALSE, pv.out = NU
 #' 
 #' Input is MAF file and the corresponding trinucleotide catalog matrix is generated
 #' 
-#' @param maf MAF file name. It must contain a column named \code{Ref_Tri} 
+#' @param maf MAF file name or data frame. It must contain a column named \code{Ref_Tri} 
 #'        containing the trinucleotide sequences surrounding the mutation site.
 #'        If the mutation site reference allele is \code{A, G}, the \code{Ref_Tri}
 #'        is the complement sequence of the trinucleotides, such that its central
 #'        allele is always \code{C, T}.
+#' @param progress.bar Display progress bar
 #'        
 #' @return Count matrix with mutation contexts in rows and \code{Tumor_Sample_Barcode}
 #'         in columns.
 #' @export
-maf2cat <- function(maf){
+maf2cat <- function(maf, progress.bar = TRUE){
   
-  if(!file.exists(maf)) stop(paste0('File ', maf, ' does not exist'))
-  x <- data.table::fread(maf)
+  if(is(maf, 'character')){ 
+    if(!file.exists(maf)) stop(paste0('File ', maf, ' does not exist'))
+    x <- data.table::fread(maf)
+  } else x <- maf
   x <- as.data.frame(x)
   col <- colnames(x)
   if(!'Ref_Tri' %in% col) stop('Column Ref_Tri does not exist in MAF')
   if('End_position' %in% col){
     col[col=='End_position'] <- 'End_Position'
     colnames(x) <- col
-  } 
-  x <- x[x$Variant_Type == 'SNP', 
-         c('Tumor_Sample_Barcode','Chromosome', 'Start_Position', 'End_Position',
+  }
+  if('Variant_Type' %in% colnames(x))
+    x <- x[x$Variant_Type == 'SNP', ]
+  
+  x <- x[, c('Tumor_Sample_Barcode', 'Chromosome', 'Start_Position', 'End_Position',
            'Reference_Allele', 'Tumor_Seq_Allele2', 'Ref_Tri')] 
   x <- x[!duplicated(x) & x$Ref_Tri != '',]
   
-  mut <- rep('', NROW(x))
-  if(NROW(x) > 0){
-    for(i in seq(NROW(x))){
+  m <- NROW(x)
+  mut <- rep('', m)
+  if(m > 0){
+    if(progress.bar) pb <- txtProgressBar(style = 3)
+    for(i in seq(m)){
        w <- c(t(x[i,c('Reference_Allele', 'Tumor_Seq_Allele2')]), 
             strsplit(as.character(x[i, 'Ref_Tri']), split='')[[1]])
        if(w[1] %in% c('A','G')) 
          w[1:2] <- ntdag(w[1:2])  # Ref_Tri is already pyrimidine at the center
        mut[i] <- paste(c(w[3], '[', w[1], '>', w[2], ']', w[5]), collapse='')
+       if(progress.bar) setTxtProgressBar(pb, i/m)
     }
+    if(progress.bar) close(pb)
     mut <- factor(mut, levels=trinucleotides(), ordered = TRUE)
     tmut <- table(mut, x$Tumor_Sample_Barcode)
     tmut <- as.data.frame.matrix(tmut)
