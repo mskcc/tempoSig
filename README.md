@@ -186,6 +186,13 @@ If a MAF file contains the column `Ref_Tri` [trinucleotide contexts surrounding 
     optional arguments:
       -h, --help  show this help message and exit
 
+If the MAF file does not contain the column `Ref_Tri`, use [maf2cat3()](https://github.com/mskcc/tempoSig/blob/master/man/maf2cat3.Rd). It requires the reference genome package [BSGenome.Hsapiens.UCSC.hg19](https://bioconductor.org/packages/BSgenome.Hsapiens.UCSC.hg19) installed:
+
+    > library(BSGenome.Hsapeisn.UCSC.hg19)
+    > maf <- system.file('extdata', 'brca.maf', package = 'tempoSig')
+    > x <- maf2cat3(maf = maf, ref.genome = BSGenome.Hsapiens.HCSC.hg19)
+    > write.table(x, file = 'brca_catalog.txt', row.names = TRUE, col.names = TRUE, sep = '\t', quote = F)
+
 ### P-value estimation
 Optionally, statistical significance of the set of proportions (rows in the exposure output) can be estimated by permutation sampling. For each signature, the exposure inference is repeated multiple times after permutation of the reference signature profile. P-values are the fractions of permuted replicates whose proportions (**H0**) are not lower than those of the original (**H1**). The p-value estimation is turned on by the argument `--pvalue`. The number of permutations is 1,000 by default and can be set with `--nperm NPERM`. The default output has the format:
 
