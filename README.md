@@ -190,7 +190,7 @@ If the MAF file does not contain the column `Ref_Tri`, use [maf2cat3()](https://
 
     > library(BSGenome.Hsapeisn.UCSC.hg19)
     > maf <- system.file('extdata', 'brca.maf', package = 'tempoSig')
-    > x <- maf2cat3(maf = maf, ref.genome = BSGenome.Hsapiens.HCSC.hg19)
+    > x <- maf2cat3(maf = maf, ref.genome = BSGenome.Hsapiens.UCSC.hg19)
     > write.table(x, file = 'brca_catalog.txt', row.names = TRUE, col.names = TRUE, sep = '\t', quote = F)
 
 ### P-value estimation
