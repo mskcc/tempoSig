@@ -21,6 +21,7 @@ extractSig(
   nrun = 10,
   useC = TRUE,
   initializer = "random",
+  verbose = 2,
   ...
 )
 }

@@ -132,9 +132,9 @@ filterExposure <- function(object, alpha = 0.05, attribution = TRUE){
 #' @param progress.bar Display progress bar
 #' @return Catalog matrix
 #' @examples 
-#' library(BSGenome.Hsapiens.UCSC.hg19)
+#' library(BSgenome.Hsapiens.UCSC.hg19)
 #' maf <- system.file('extdata', 'brca.maf', package = 'tempoSig')
-#' x <- maf2cat3(maf, BSGenome.Hsapiens.HCSC.hg19)
+#' x <- maf2cat3(maf, BSgenome.Hsapiens.UCSC.hg19)
 #' head(x)
 #' 
 #' @export

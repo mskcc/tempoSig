@@ -28,7 +28,7 @@
 extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb = 2,
                        compute.pval = FALSE, nperm = 1000, progress.bar = FALSE,
                        pvtest = 'permutation', cosmic = FALSE, Kmin = 2, K = 2, 
-                       Kmax = 30, nrun =10, useC = TRUE, initializer = 'random', ...){
+                       Kmax = 30, nrun =10, useC = TRUE, initializer = 'random', verbose = 2, ...){
 
   if(Kmax < 2 ) stop('Kmax must be at least 2')
   if(!is(object, 'tempoSig')) stop('object is not of class tempoSig')
@@ -61,7 +61,7 @@ extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb
     else{ # bnmf
       sig <- colnames(signat(object))
       object <- bnmf(object, ranks=seq(Kmin,Kmax), nrun = nrun, useC = useC, 
-                     initializer = initializer, ...)
+                     initializer = initializer, verbose = verbose, ...)
       W <- signat(object)
       H <- expos(object)
       if(initializer=='restart')

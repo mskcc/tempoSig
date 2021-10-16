@@ -16,3 +16,9 @@ Data frame with chromosome names fixed
 This function is a wrapper intended for use in \code{maf2cat3}, which requires chromosome names
 compatible with \code{BSgenome.Hsapiens.UCSC.hg19} (\code{chr1, ..., chrX, chrY}).
 }
+\examples{
+maf <- system.file('extdata', 'brca.maf', package = 'tempoSig')
+maf <- readMAFforcat(maf)
+head(maf)
+
+}

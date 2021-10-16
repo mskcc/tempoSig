@@ -22,9 +22,9 @@ Catalog matrix
 Construct catalog matix from MAF file (without of Ref_Tri column)
 }
 \examples{
-library(BSGenome.Hsapiens.UCSC.hg19)
+library(BSgenome.Hsapiens.UCSC.hg19)
 maf <- system.file('extdata', 'brca.maf', package = 'tempoSig')
-x <- maf2cat3(maf, BSGenome.Hsapiens.HCSC.hg19)
+x <- maf2cat3(maf, BSgenome.Hsapiens.UCSC.hg19)
 head(x)
 
 }

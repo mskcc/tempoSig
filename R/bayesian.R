@@ -196,6 +196,7 @@ bnmf <- function(object, ranks=2:10, nrun=1, verbose=2,
    if(!kstar %in% c('kmax','kopt')) stop('Unknown option for kstar')
    if(is.null(fudge)) fudge <- .Machine$double.eps
    mat <- catalog(object)
+   Sname <- colnames(signat(object))
    
    nullr <- sum(Matrix::rowSums(mat)==0)
    nullc <- sum(Matrix::colSums(mat)==0)
@@ -215,7 +216,7 @@ bnmf <- function(object, ranks=2:10, nrun=1, verbose=2,
                   w=signat(object), h=expos(object), sindex=sindex)
    vb <- lapply(seq_len(nrun), FUN=bnmf_iterate, bundle)
   
-   basis <- coeff <- vector('list',nrank)
+   basis <- coeff <- dbasis <- dcoeff <- vector('list',nrank)
    rdat <- c()
    ranks2 <- c()
    
@@ -234,16 +235,27 @@ bnmf <- function(object, ranks=2:10, nrun=1, verbose=2,
      h <- vb[[imax]]$hdat[[k]]
      dw <- vb[[imax]]$dwdat[[k]]
      dh <- vb[[imax]]$dhdat[[k]]
+     
+#     dw <- t(t(dw) / cw^2)
+#     dh <- dh * cw^2
+#     dbasis[[k]] <- dw
+#     dcoeff[[k]] <- dh
+     
+     dbasis[[k]] <- dw/w       # coefficient of variation (dimenisionless; dw is std dev.) 
+     dcoeff[[k]] <- dh/h
+     
      cw <- colSums(w)   # normalization
      w <- t(t(w) / cw)
      h <- h * cw
-     dw <- t(t(dw) / cw^2)
-     dh <- h * cw^2
      basis[[k]] <- w
      coeff[[k]] <- h
-
-     rownames(basis[[k]]) <- rownames(mat)
-     colnames(coeff[[k]]) <- colnames(mat)
+     colnames(basis[[k]]) <- Sname[seq(ranks[k])]
+     rownames(coeff[[k]]) <- Sname[seq(ranks[k])]
+     
+     rownames(basis[[k]]) <- rownames(dbasis[[k]]) <- rownames(mat)
+     colnames(coeff[[k]]) <- colnames(dcoeff[[k]]) <- colnames(mat)
+     colnames(dbasis[[k]]) <- colnames(basis[[k]])
+     rownames(dcoeff[[k]]) <- rownames(coeff[[k]])
    }
    
    if(kstar=='kmax') Kstar <- max(which(is.finite(rdat)))
@@ -253,6 +265,8 @@ bnmf <- function(object, ranks=2:10, nrun=1, verbose=2,
    H <- coeff[[Kstar]]
    expos(object) <- t(t(H)/colSums(H))
    misc(object)[['measure']] <- data.frame(K = ranks2, LML = rdat)
+   misc(object)[['dW']] <- dbasis
+   misc(object)[['dH']] <- dcoeff
 
    return(object)
 }
@@ -311,7 +325,19 @@ bnmf_iterate <- function(irun, bundle){
          hyper <- hyper_update(bundle$hyper.update, wh, hyper, Niter=100, Tol=1e-3)
        if(is.na(wh$lkh)) break
        if(it>1) if(it > bundle$hyper.update.n0)
-          if(wh$lkh>=lk0) if(abs(1-wh$lkh/lk0) < bundle$Tol) break
+         if(wh$lkh>=lk0) if(abs(1-wh$lkh/lk0) < bundle$Tol) break
+#       if(it <= bundle$hyper.update.n0){
+#          w0 <- wh$w
+#          h0 <- wh$h
+#       } else{
+#          df1 <- max(abs(wh$w - w0)/w0)
+#          df2 <- max(abs(wh$h - h0)/h0)
+#          df <- df2
+#          cat('it=',it,', df=',df,'\n')
+#          if(df < bundle$Tol) break
+#          w0 <- wh$w
+#          h0 <- wh$h
+#       }
        lk0 <- wh$lkh
        if(bundle$verbose >= 3) cat(it,', lkl = ',lk0, '\n',sep='')
      }
@@ -327,7 +353,7 @@ bnmf_iterate <- function(irun, bundle){
      wdat[[irank]] <- wh$ew
      hdat[[irank]] <- wh$eh
      dwdat[[irank]] <- sqrt(wh$dw)
-     dhdat[[irank]] <- sqrt(wh$dh) 
+     dhdat[[irank]] <- sqrt(wh$dh)
      hyperp[[irank]] <- hyper
      if(bundle$verbose >= 2)
        cat('K = ',rank,': iteration = ',it,', lkl= ',lk0,'\n',sep='')
