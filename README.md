@@ -186,12 +186,26 @@ If a MAF file contains the column `Ref_Tri` [trinucleotide contexts surrounding 
     optional arguments:
       -h, --help  show this help message and exit
 
-If the MAF file does not contain the column `Ref_Tri`, use [maf2cat3()](https://github.com/mskcc/tempoSig/blob/master/man/maf2cat3.Rd). It requires the reference genome package [BSGenome.Hsapiens.UCSC.hg19](https://bioconductor.org/packages/BSgenome.Hsapiens.UCSC.hg19) installed:
+If the MAF file does not contain the column `Ref_Tri`, use [maf2cat3()](https://github.com/mskcc/tempoSig/blob/master/man/maf2cat3.Rd). It requires the reference genome package [BSgenome.Hsapiens.UCSC.hg19](https://bioconductor.org/packages/BSgenome.Hsapiens.UCSC.hg19) installed:
 
-    > library(BSGenome.Hsapeisn.UCSC.hg19)
+    > library(BSgenome.Hsapeisn.UCSC.hg19)
     > maf <- system.file('extdata', 'brca.maf', package = 'tempoSig')
-    > x <- maf2cat3(maf = maf, ref.genome = BSGenome.Hsapiens.UCSC.hg19)
+    > x <- maf2cat3(maf = maf, ref.genome = BSgenome.Hsapiens.UCSC.hg19)
     > write.table(x, file = 'brca_catalog.txt', row.names = TRUE, col.names = TRUE, sep = '\t', quote = F)
+    
+If you do not want to use R-interface, a command-line script is available, assuming that Bsgenome.Hsapiens.UCSC.hg19 package has been installed:
+
+    $ ./maf2cat3.R -h
+    usage: ./maf2cat3.R [-h] MAF CATALOG
+
+    Construct mutational catalog from MAF file with Ref_Tri column
+
+    positional arguments:
+      MAF         input MAF file
+      CATALOG     output catalog file
+
+    optional arguments:
+      -h, --help  show this help message and exit
 
 ### P-value estimation
 Optionally, statistical significance of the set of proportions (rows in the exposure output) can be estimated by permutation sampling. For each signature, the exposure inference is repeated multiple times after permutation of the reference signature profile. P-values are the fractions of permuted replicates whose proportions (**H0**) are not lower than those of the original (**H1**). The p-value estimation is turned on by the argument `--pvalue`. The number of permutations is 1,000 by default and can be set with `--nperm NPERM`. The default output has the format:
@@ -203,6 +217,32 @@ TCGA.E9.A22B         | 50                  | 0.51                 | 0           
 TCGA.OL.A5RV         | 10                  | 0.41                 | 0.6                  | 1.2e-11              | 0.55        
 
 Note that p-value of 0 indicates that out of `NPERM` samples, none exceeded **H1**, and therefore must be interpreted as *P* < 1/`NPERM`. Alternatively, one can have two output files, one for exposure and the other for p-vaues, by specifiying the argument `--pv.out PV.OUT`. The exposure output `OUTPUT` is in the same format as that without p-value computation. The p-value output `PV.OUT` has the analogous format with columns for each signature p-values.
+
+### De novo inference
+
+See [vignettes](http://htmlpreview.github.io/?https://github.com/mskcc/tempoSig/blob/master/old/tempoSig.html) for de novo inference.
+
+### Hybrid inference
+
+For higher sensitivity and specificity, a hybrid approach ("piggyback inference"), combining elements of both refitting and de novo, can be used. There is a command-line script that invokes a standard 11-signature de novo reference (and optionally a pre-optimized filtering cutoff parameters):
+
+    $ ./pgback.R -h
+    usage: ./pgback.R [-h] [--filter] [--cutoff CUTOFF] [--seed SEED]
+                      CATALOG OUTPUT
+
+    Perform piggyback de novo inference
+
+    positional arguments:
+      CATALOG          input catalog data file
+      OUTPUT           output file name
+
+    optional arguments:
+      -h, --help       show this help message and exit
+      --filter         filter exposures using CV cutoffs (default FALSE)
+      --cutoff CUTOFF  custom cutoff file
+      --seed SEED      random number seed
+
+Using the --filter option without a cutoff file input will produce 11-signature filtered exposures minimizing false positives in WES and IMPACT data.
 
 ## Documentation
 
