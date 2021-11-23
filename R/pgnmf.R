@@ -8,7 +8,7 @@
 #' @param cutoff CV cutoff matrix for filtering
 #' @return List of \code{mean} and coefficient of variation \code{cv} (sd/mean) of exposure matrices 
 #' @export
-pgnmf <- function(x, stock = NULL, filter = FALSE, cutoff = NULL, progress.bar = TRUE, ...){
+pgnmf <- function(x, stock = NULL, filter = FALSE, cutoff = NULL, progress.bar = TRUE, verbose = 1, ...){
   
   if(is.null(stock)){
     fl <- system.file('extdata/pig_K11.rds', package = 'tempoSig')
@@ -33,7 +33,8 @@ pgnmf <- function(x, stock = NULL, filter = FALSE, cutoff = NULL, progress.bar =
     b <- tempoSig(data = xcat, signat = stock.w)
     expos(b) <- cbind(stock.h, data.frame(xk = rep(1/K, K)))
     tmb(b) <- c(tmb(b), 'xk' = m[k])
-    b <- extractSig(b, method = 'bnmf', nrun = 1, Kmin = K, Kmax = K, initializer = 'restart', verbose = 1, ...)
+    b <- extractSig(b, method = 'bnmf', nrun = 1, Kmin = K, Kmax = K, initializer = 'restart',
+                    verbose = verbose -1 , ...)
     dx <- t(expos(b)[,N+1])
     rownames(dx) <- colnames(x)[k]
     dat <- rbind(dat, dx)

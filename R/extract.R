@@ -66,8 +66,14 @@ extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb
       H <- expos(object)
       if(initializer=='restart')
         colnames(W) <- rownames(H) <- sig
-      else
-        colnames(W) <- rownames(H) <- paste0('S',seq(NCOL(W)))
+      else{
+        S <- paste0('S',seq(NCOL(W)))
+        colnames(W) <- rownames(H) <- S
+        for(k in seq_along(misc(object)$dW)){
+          if(!is.null(misc(object)$dW[[k]])) colnames(misc(object)$dW[[k]]) <- S[seq(1, Kmin+k-1)]
+          if(!is.null(misc(object)$dH[[k]])) rownames(misc(object)$dH[[k]]) <- S[seq(1, Kmin+k-1)]
+        }
+      }
       signat(object) <- W
       expos(object) <- H
       return(object)
@@ -89,7 +95,7 @@ extractSig <- function(object, method = 'mle', itmax = 1000, tol = 1e-4, min.tmb
 #     }
       signat(object) <- W
     }
-    expos(object) <- H
+    expos(object) <- t(H)
     logLik(object) <- nmf$logLik
     if(compute.pval & method == 'hnmf'){   # estimate p-values by permutation resampling
       cat('Estimating p-values ...\n',sep='')

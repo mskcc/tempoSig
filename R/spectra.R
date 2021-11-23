@@ -23,25 +23,32 @@
 #' W <- t(gtools::rdirichlet(n = K, alpha = rep(1, 96)))
 #' rownames(W) <- trinucleotides()
 #' h <- gtools::rdirichlet(n = 1, alpha = rep(5, K))
+#' names(h) <- colnames(W) <- pase0('S',seq(K))
 #' x <- simulateSpectra(W = W, h = h, N = 100)
 #' 
 #' h <- read.table(system.file('extdata', 'hmean_breast_lung_skin_pancr.txt',
 #'                             package = 'tempoSig'), header = TRUE, sep = '\t')
 #' h <- t(h)['Breast',]
-#' x <- simulateSpectra(h = h, N = 100)
+#' x <- simulateSpectra(W = 'SA', h = h, N = 100)
 #' @export
 simulateSpectra <- function(W = NULL, pzero = 0, nmut = 100, h, N = 10, dilute.ultra = FALSE, 
                             min.mut = 1, distr = 'pois', vmr = 2, Ntry = 10000){
 
-  if(is.null(W)) W <- 'SA'
+  if(is.null(W)) W <- 'cosmic_v2'
   if(is.character(W)){
+    if(!W %in% c('cosmic_v2','SA','SP')) stop(paste0('Unknown signature set: ',W))
+    if(W=='cosmic_v2')
+      z <- read.table(system.file('extdata', 'cosmic_snv_signatures_v2.txt',
+                                  package = 'tempoSig'), header = TRUE, sep = '\t')
     if(W=='SA')
-      W <- read.table(system.file('extdata', 'cosmic_SigAnalyzer_SBS_signatures.txt',
+      z <- read.table(system.file('extdata', 'cosmic_SigAnalyzer_SBS_signatures.txt',
                                 package = 'tempoSig'), header = TRUE, sep = '\t')
-    else(W=='SP')
-      W <- read.table(system.file('extdata', 'cosmic_sigProfiler_SBS_signatures.txt',
+    if(W=='SP')
+      z <- read.table(system.file('extdata', 'cosmic_sigProfiler_SBS_signatures.txt',
                                 package = 'tempoSig'), header = TRUE, sep = '\t')
+    W <- z
   }
+  
   if(!is(W, 'matrix')) W <- as.matrix(W)
   m <- NROW(W)
   h <- h[h > 0]
@@ -60,11 +67,11 @@ simulateSpectra <- function(W = NULL, pzero = 0, nmut = 100, h, N = 10, dilute.u
     itry <- 0
     while(TRUE){
       for(k in seq(1, K)){
-        if(pzero > 0) p = rbinom(n = 1, size = 1, prob = 1 - pzero)
+        if(pzero > 0) p <- rbinom(n = 1, size = 1, prob = 1 - pzero)
         else p <- 1
         if(p==0) next()
         if(distr=='delta')
-          H[k,i] <- lsk[k]
+          H[k, i] <- lsk[k]
         else if(distr=='pois')
           H[k, i] <- rpois(n = 1, lambda = lsk[k])  # poisson
         else if(distr=='nbinom'){
@@ -86,6 +93,7 @@ simulateSpectra <- function(W = NULL, pzero = 0, nmut = 100, h, N = 10, dilute.u
     if(all(colSums(X) >= min.mut)) break()  # repeat until all columns are non-empty
   }
   rownames(X) <- rownames(W)
+  colnames(X) <- colnames(H) <- paste0('Sample_',seq(N))
   if(dilute.ultra)
     X <- diluteUltraMutated(X)
 
@@ -152,4 +160,31 @@ row2Column <- function(X){
   X2 <- data.frame(Tumor_Sample_Barcode = sid, X)
 
   return(X2)
+}
+
+#' Generate simulated mutational catalog
+#' @param W Signature matrix with rows 96 contexts and columns signatures
+#' @param n Number of catalogs to generate
+#' @param min.M Minimum mutation count
+#' @param max.M Maximum mutation count
+#' @return Catalog matrix
+#' @export
+simulateCatalog <- function(W, n, min.M, max.M){
+  
+  if(!is.matrix(W)) W <- as.matrix(W)
+  if(!all(rownames(W)==trinucleotides())) stop('Rows of signat do not match trinucleotides')
+  K <- NCOL(W)
+  if(any(abs(colSums(W)-rep(1,K)) > 1e-5)) stop('Signature proportions not normalized')
+  
+  M <- exp(runif(n = n, min = log(min.M), max = log(max.M)))
+  H <- matrix(runif(n = n*K), nrow = K)
+  H <- t(M*t(H)/colSums(H))
+  
+  X <- W %*% H
+  X <- apply(X, 1:2, function(x){rpois(n=1, lambda = x)})
+  rownames(X) <- rownames(W)
+  colnames(X) <- colnames(H) <- paste0('Sample_',seq(n))
+  rownames(H) <- colnames(W)
+
+  return(list(X=X, W=W, H=H))
 }

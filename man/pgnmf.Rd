@@ -4,7 +4,15 @@
 \alias{pgnmf}
 \title{piggyback NMF}
 \usage{
-pgnmf(x, stock = NULL, filter = FALSE, cutoff = NULL, progress.bar = TRUE, ...)
+pgnmf(
+  x,
+  stock = NULL,
+  filter = FALSE,
+  cutoff = NULL,
+  progress.bar = TRUE,
+  verbose = 1,
+  ...
+)
 }
 \arguments{
 \item{x}{Catalog matrix to be analyzed}
