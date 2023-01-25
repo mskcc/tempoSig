@@ -47,7 +47,7 @@ if(args$cbio & args$pvalue & is.null(args$pv.out)){
   args$pv.out <- 'pvalues.txt'
 }
 
-data <- read.table(args$catalog, header = TRUE, sep = '\t')
+data <- read.table(args$catalog, header = TRUE, sep = '\t', check.names = FALSE)
 x <- tempoSig(data = data, signat = sig)
 x <- extractSig(object = x, compute.pval = args$pvalue, nperm = args$nperm, progress.bar = TRUE)
 writeExposure(object = x, output = args$output, pv.out = args$pv.out, sep = '\t', 
